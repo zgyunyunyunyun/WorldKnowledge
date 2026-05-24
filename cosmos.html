@@ -5,1278 +5,845 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>认知宇宙 · 知识星系可视化</title>
 <style>
-:root {
-  --bg: #000010;
-  --text: #e8edf2;
-  --text-secondary: #8b9db5;
-  --text-muted: #5a6e85;
-  --glass-bg: rgba(10, 15, 30, 0.9);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --radius: 14px;
-  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.6);
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
+  background:#000010;color:#e8edf2;overflow:hidden;height:100vh;width:100vw;
+  user-select:none;-webkit-user-select:none;
+}
+canvas{display:block;position:fixed;top:0;left:0;z-index:1}
+
+/* Password */
+.pw-overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:radial-gradient(ellipse at center,#0a0a2e 0%,#000010 100%);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .5s,visibility .5s;
+}
+.pw-overlay.off{opacity:0;visibility:hidden;pointer-events:none}
+.pw-card{
+  background:rgba(15,20,40,.88);backdrop-filter:blur(20px);
+  border:1px solid rgba(100,130,255,.15);
+  border-radius:16px;padding:48px 40px;width:400px;max-width:90vw;
+  text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.6),0 0 60px rgba(99,102,241,.08);
+}
+.pw-icon{font-size:52px;animation:pwFloat 3s ease-in-out infinite}
+@keyframes pwFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.pw-card h1{
+  font-size:26px;font-weight:700;margin:12px 0 4px;
+  background:linear-gradient(135deg,#a5b4fc,#c4b5fd,#fbbf24);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.pw-sub{font-size:14px;color:#5a6e85;margin-bottom:24px}
+.pw-card input{
+  width:100%;padding:14px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);border-radius:10px;
+  color:#e8edf2;font-size:15px;outline:none;text-align:center;letter-spacing:4px;
+  transition:.2s;
+}
+.pw-card input:focus{border-color:rgba(99,102,241,.5);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.pw-card input.err{border-color:#ef4444;animation:pwShake .4s ease}
+@keyframes pwShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pw-card button{
+  width:100%;padding:14px;margin-top:14px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+  border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;
+}
+.pw-card button:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,102,241,.35)}
+.pw-err{color:#ef4444;font-size:13px;margin-top:10px;min-height:20px}
+
+/* UI */
+.ui-bar{
+  position:fixed;top:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;pointer-events:none;
+}
+.ui-bar>*{pointer-events:auto}
+.ui-btn{
+  padding:8px 16px;border-radius:20px;
+  background:rgba(15,20,40,.7);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.1);
+  color:#8b9db5;font-size:13px;cursor:pointer;transition:.2s;
+  font-family:inherit;display:flex;align-items:center;gap:6px;
+}
+.ui-btn:hover{background:rgba(30,40,70,.8);color:#e8edf2;border-color:rgba(255,255,255,.2)}
+.ui-btn.off{visibility:hidden;opacity:0}
+.ui-title{
+  font-size:16px;font-weight:700;
+  background:linear-gradient(135deg,#a5b4fc,#e2e8f0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.ui-actions{display:flex;gap:8px}
+.ui-icon-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(15,20,40,.7);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.1);
+  color:#8b9db5;font-size:15px;cursor:pointer;transition:.2s;
+  display:flex;align-items:center;justify-content:center;text-decoration:none;
+}
+.ui-icon-btn:hover{background:rgba(30,40,70,.8);color:#e8edf2}
+.ui-hint{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:10;
+  pointer-events:none;
+}
+.ui-hint span{
+  font-size:12px;color:#5a6e85;
+  background:rgba(15,20,40,.6);backdrop-filter:blur(8px);
+  padding:6px 16px;border-radius:16px;
+  border:1px solid rgba(255,255,255,.06);
+}
+.ui-legend{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;
+  display:flex;gap:16px;pointer-events:none;
+}
+.ui-legend-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:#5a6e85;
+  background:rgba(15,20,40,.6);backdrop-filter:blur(8px);
+  padding:4px 10px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.06);
+}
+.ui-legend-dot{width:7px;height:7px;border-radius:50%}
+
+/* Modal */
+.modal{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;transition:.3s;
+}
+.modal.on{opacity:1;visibility:visible}
+.modal-card{
+  background:rgba(12,18,35,.96);backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;width:600px;max-width:92vw;max-height:82vh;
+  overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.6),0 0 80px rgba(99,102,241,.06);
+  transform:translateY(12px);transition:transform .3s;
+}
+.modal.on .modal-card{transform:translateY(0)}
+.modal-card::-webkit-scrollbar{width:4px}
+.modal-card::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.modal-hd{
+  padding:20px 24px 14px;display:flex;align-items:flex-start;justify-content:space-between;
+  position:sticky;top:0;background:rgba(12,18,35,.96);backdrop-filter:blur(24px);z-index:2;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.modal-hd .pi{display:flex;align-items:center;gap:12px}
+.modal-hd .pd{width:38px;height:38px;border-radius:50%;flex-shrink:0}
+.modal-hd h2{font-size:19px;font-weight:700}
+.modal-hd .bc{font-size:12px;color:#5a6e85;margin-top:2px}
+.modal-hd .cb{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  color:#5a6e85;font-size:16px;cursor:pointer;transition:.2s;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.modal-hd .cb:hover{background:rgba(255,255,255,.12);color:#e8edf2}
+.modal-bd{padding:16px 24px 24px;display:flex;flex-direction:column;gap:14px}
+.sec{display:flex;flex-direction:column;gap:5px}
+.sec-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5a6e85;display:flex;align-items:center;gap:6px}
+.sec-lbl .li{font-size:14px}
+.sec-cnt{
+  font-size:14px;color:#8b9db5;line-height:1.8;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;padding:12px 14px;
+}
+.insight{
+  background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);
+  border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.8;color:#c7d2fe;
+}
+.orig{
+  background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);
+  border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.7;color:#fcd34d;font-style:italic;
+}
+.meta{display:flex;gap:10px;flex-wrap:wrap}
+.meta-tag{
+  padding:4px 10px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);border-radius:10px;
+  font-size:11px;color:#5a6e85;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-canvas {
-  display: block;
-  position: fixed;
-  top: 0; left: 0;
-  z-index: 1;
-}
-
-/* Password Overlay */
-.password-overlay {
-  position: fixed; inset: 0;
-  background: radial-gradient(ellipse at center, #0a0a2e 0%, #000010 100%);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-  transition: opacity 0.6s, visibility 0.6s;
-}
-.password-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-
-.password-card {
-  background: rgba(15, 20, 40, 0.85);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(100, 130, 255, 0.15);
-  border-radius: var(--radius);
-  padding: 48px 40px;
-  width: 400px; max-width: 90vw;
-  text-align: center;
-  box-shadow: var(--shadow-lg), 0 0 60px rgba(99, 102, 241, 0.08);
-}
-.password-card .galaxy-icon {
-  font-size: 48px; margin-bottom: 16px;
-  animation: float 3s ease-in-out infinite;
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-.password-card h1 {
-  font-size: 26px; font-weight: 700;
-  background: linear-gradient(135deg, #a5b4fc, #c4b5fd, #fbbf24);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 6px;
-}
-.password-card .subtitle {
-  font-size: 14px; color: var(--text-muted); margin-bottom: 28px;
-}
-.password-card input {
-  width: 100%; padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: var(--text);
-  font-size: 15px; outline: none;
-  text-align: center; letter-spacing: 4px;
-  transition: 0.2s;
-}
-.password-card input:focus {
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-}
-.password-card input.error {
-  border-color: #ef4444;
-  animation: shake 0.4s ease;
-}
-.password-card button {
-  width: 100%; padding: 14px; margin-top: 16px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white; border: none;
-  border-radius: 10px; font-size: 15px; font-weight: 600;
-  cursor: pointer; transition: 0.2s;
-}
-.password-card button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
-}
-.password-card .error-msg {
-  color: #ef4444; font-size: 13px; margin-top: 10px; min-height: 20px;
-}
-@keyframes shake {
-  0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}
-}
-
-/* UI Overlay */
-.ui-overlay {
-  position: fixed; inset: 0;
-  z-index: 10; pointer-events: none;
-  display: flex; flex-direction: column;
-  transition: opacity 0.5s;
-}
-.ui-overlay.hidden { opacity: 0; }
-
-/* Top Bar */
-.top-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 24px;
-  pointer-events: auto;
-}
-.top-bar .nav-btn {
-  padding: 10px 18px;
-  background: rgba(15, 20, 40, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  color: var(--text-secondary);
-  font-size: 13px; cursor: pointer;
-  transition: 0.2s; display: flex; align-items: center; gap: 6px;
-  font-family: inherit;
-}
-.top-bar .nav-btn:hover {
-  background: rgba(30, 40, 70, 0.8);
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-.top-bar .nav-btn.hidden { visibility: hidden; opacity: 0; }
-
-.top-bar .view-title {
-  font-size: 16px; font-weight: 700;
-  background: linear-gradient(135deg, #a5b4fc, #e2e8f0);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-  pointer-events: none;
-}
-
-.top-bar .top-actions {
-  display: flex; gap: 10px;
-}
-.top-bar .action-btn {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  background: rgba(15, 20, 40, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary); font-size: 16px;
-  cursor: pointer; transition: 0.2s;
-  display: flex; align-items: center; justify-content: center;
-}
-.top-bar .action-btn:hover {
-  background: rgba(30, 40, 70, 0.8);
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Hint Text */
-.hint-text {
-  text-align: center;
-  padding: 8px 20px;
-  pointer-events: none;
-}
-.hint-text span {
-  font-size: 13px; color: var(--text-muted);
-  background: rgba(15, 20, 40, 0.6);
-  backdrop-filter: blur(8px);
-  padding: 6px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: opacity 0.5s;
-}
-
-/* Bottom Legend */
-.bottom-legend {
-  position: fixed; bottom: 24px; left: 50%;
-  transform: translateX(-50%);
-  z-index: 10; pointer-events: none;
-  display: flex; gap: 20px;
-}
-.legend-item {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: var(--text-muted);
-  background: rgba(15, 20, 40, 0.6);
-  backdrop-filter: blur(8px);
-  padding: 6px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-.legend-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-}
-
-/* Detail Modal */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 100;
-  opacity: 0; visibility: hidden;
-  transition: 0.3s;
-}
-.modal-overlay.open { opacity: 1; visibility: visible; }
-
-.modal-card {
-  background: rgba(15, 20, 40, 0.95);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius);
-  width: 620px; max-width: 92vw;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg), 0 0 80px rgba(99, 102, 241, 0.08);
-  transform: translateY(12px);
-  transition: transform 0.3s;
-}
-.modal-overlay.open .modal-card { transform: translateY(0); }
-
-.modal-card::-webkit-scrollbar { width: 4px; }
-.modal-card::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1); border-radius: 2px;
-}
-
-.modal-header {
-  padding: 24px 28px 16px;
-  display: flex; align-items: flex-start; justify-content: space-between;
-  position: sticky; top: 0;
-  background: rgba(15, 20, 40, 0.95);
-  backdrop-filter: blur(24px);
-  z-index: 2;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-.modal-header .planet-info { display: flex; align-items: center; gap: 14px; }
-.modal-header .planet-dot {
-  width: 40px; height: 40px; border-radius: 50%;
-  flex-shrink: 0; box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-}
-.modal-header h2 {
-  font-size: 20px; font-weight: 700;
-  line-height: 1.3;
-}
-.modal-header .breadcrumb {
-  font-size: 12px; color: var(--text-muted);
-  margin-top: 2px;
-}
-.modal-header .close-btn {
-  width: 34px; height: 34px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 50%;
-  color: var(--text-muted); font-size: 18px;
-  cursor: pointer; transition: 0.2s;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.modal-header .close-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text);
-}
-
-.modal-body { padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 18px; }
-.modal-body .section { display: flex; flex-direction: column; gap: 6px; }
-.modal-body .section-label {
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.8px;
-  color: var(--text-muted);
-  display: flex; align-items: center; gap: 6px;
-}
-.modal-body .section-label .label-icon { font-size: 14px; }
-.modal-body .section-content {
-  font-size: 14px; color: var(--text-secondary);
-  line-height: 1.8;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-
-.modal-body .insight-box {
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 10px;
-  padding: 14px 16px;
-  font-size: 14px; line-height: 1.8;
-  color: #c7d2fe;
-  position: relative;
-}
-.modal-body .insight-box::before {
-  content: '💡';
-  position: absolute; top: -10px; left: 14px;
-  font-size: 18px;
-}
-
-.modal-body .original-box {
-  background: rgba(245, 158, 11, 0.06);
-  border: 1px solid rgba(245, 158, 11, 0.15);
-  border-radius: 10px;
-  padding: 14px 16px;
-  font-size: 13px; line-height: 1.7;
-  color: #fcd34d;
-  font-style: italic;
-  position: relative;
-}
-.modal-body .original-box::before {
-  content: '📜';
-  position: absolute; top: -10px; left: 14px;
-  font-size: 16px;
-}
-
-.modal-body .meta-row {
-  display: flex; gap: 12px; flex-wrap: wrap;
-}
-.modal-body .meta-tag {
-  padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  font-size: 11px; color: var(--text-muted);
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .top-bar { padding: 12px 12px; }
-  .top-bar .nav-btn { padding: 8px 12px; font-size: 12px; }
-  .top-bar .view-title { font-size: 14px; }
-  .modal-card { max-width: 100vw; max-height: 100vh; border-radius: 0; }
-  .modal-header { padding: 18px 16px 12px; }
-  .modal-body { padding: 14px 16px 20px; }
-  .bottom-legend { bottom: 14px; gap: 10px; }
-  .legend-item { padding: 4px 10px; font-size: 10px; }
-  .password-card { padding: 32px 24px; }
+@media(max-width:768px){
+  .ui-bar{padding:10px 10px}
+  .ui-btn{padding:6px 12px;font-size:12px}
+  .ui-title{font-size:14px}
+  .modal-card{max-width:100vw;max-height:100vh;border-radius:0}
+  .modal-hd{padding:16px 14px 10px}
+  .modal-bd{padding:12px 14px 18px}
+  .pw-card{padding:32px 24px}
 }
 </style>
 </head>
 <body>
 
-<!-- Password Overlay -->
-<div class="password-overlay" id="passwordOverlay">
-  <div class="password-card">
-    <div class="galaxy-icon">🌌</div>
-    <h1>认知宇宙</h1>
-    <p class="subtitle">个人知识星系 · 让思考可视化</p>
-    <input type="password" id="passwordInput"
-           placeholder="输入访问密码" autocomplete="off"
-           onkeydown="if(event.key==='Enter')unlock()">
-    <button onclick="unlock()">🚀 探索宇宙</button>
-    <div class="error-msg" id="passwordError"></div>
-  </div>
+<div class="pw-overlay" id="pwOverlay">
+<div class="pw-card">
+<div class="pw-icon">🌌</div>
+<h1>认知宇宙</h1>
+<p class="pw-sub">个人知识星系 · 让思考可视化</p>
+<input type="password" id="pwInput" placeholder="输入访问密码" autocomplete="off" onkeydown="if(event.key==='Enter')unlock()">
+<button onclick="unlock()">🚀 探索宇宙</button>
+<div class="pw-err" id="pwErr"></div>
+</div>
 </div>
 
-<!-- UI Overlay -->
-<div class="ui-overlay hidden" id="uiOverlay">
-  <div class="top-bar">
-    <button class="nav-btn hidden" id="btnBack" onclick="navigateBack()">
-      ← 返回
-    </button>
-    <div class="view-title" id="viewTitle">认知宇宙</div>
-    <div class="top-actions">
-      <button class="action-btn" onclick="resetView()" title="回到总览">🏠</button>
-      <a href="index.html" class="action-btn" title="表格视图" style="text-decoration:none;">📋</a>
-    </div>
-  </div>
-  <div style="flex:1;"></div>
-  <div class="hint-text">
-    <span id="hintText">点击星系探索你的知识宇宙</span>
-  </div>
+<div class="ui-bar" id="uiBar" style="visibility:hidden">
+<button class="ui-btn off" id="btnBack" onclick="goBack()">← 返回</button>
+<div class="ui-title" id="viewTitle">认知宇宙</div>
+<div class="ui-actions">
+<button class="ui-icon-btn" onclick="resetView()" title="回到总览">🏠</button>
+<a href="index.html" class="ui-icon-btn" title="表格视图">📋</a>
+</div>
 </div>
 
-<!-- Legend -->
-<div class="bottom-legend" id="bottomLegend">
-  <div class="legend-item"><span class="legend-dot" style="background:#6366f1;"></span> 星系</div>
-  <div class="legend-item"><span class="legend-dot" style="background:#fbbf24;"></span> 恒星系</div>
-  <div class="legend-item"><span class="legend-dot" style="background:#60a5fa;"></span> 知识点</div>
+<div class="ui-hint" id="uiHint" style="visibility:hidden"><span id="hintSpan">点击星系探索你的知识宇宙</span></div>
+
+<div class="ui-legend" id="uiLegend" style="visibility:hidden">
+<div class="ui-legend-item"><span class="ui-legend-dot" style="background:#6366f1"></span> 星系</div>
+<div class="ui-legend-item"><span class="ui-legend-dot" style="background:#fbbf24"></span> 恒星系</div>
+<div class="ui-legend-item"><span class="ui-legend-dot" style="background:#60a5fa"></span> 知识点</div>
 </div>
 
-<!-- Planet Detail Modal -->
-<div class="modal-overlay" id="planetModal">
-  <div class="modal-card">
-    <div class="modal-header">
-      <div class="planet-info">
-        <div class="planet-dot" id="modalPlanetDot"></div>
-        <div>
-          <h2 id="modalPlanetName"></h2>
-          <div class="breadcrumb" id="modalBreadcrumb"></div>
-        </div>
-      </div>
-      <button class="close-btn" onclick="closePlanetModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody">
-      <!-- dynamically filled -->
-    </div>
-  </div>
+<div class="modal" id="planetModal">
+<div class="modal-card">
+<div class="modal-hd">
+<div class="pi">
+<div class="pd" id="modalDot"></div>
+<div><h2 id="modalName"></h2><div class="bc" id="modalBc"></div></div>
+</div>
+<button class="cb" onclick="closeModal()">✕</button>
+</div>
+<div class="modal-bd" id="modalBody"></div>
+</div>
 </div>
 
-<canvas id="cosmosCanvas"></canvas>
+<canvas id="c"></canvas>
 
-<script type="application/json" id="cosmos-data">
-{
-  "version": "1.1",
-  "lastUpdated": "2026-05-24",
-  "galaxies": [
-    {
-      "id": "income",
-      "name": "收入认知星系",
-      "color": "#f59e0b",
-      "glowColor": "rgba(245, 158, 11, 0.35)",
-      "description": "关于收入来源结构、底层逻辑与价值创造的认知分析",
-      "starSystems": [
-        {
-          "id": "income-pillars",
-          "name": "收入三支柱恒星系",
-          "color": "#fbbf24",
-          "description": "工资、股票、项目三大收入来源的现状与瓶颈分析",
-          "planets": [
-            {
-              "id": "salary",
-              "name": "工资",
-              "color": "#60a5fa",
-              "size": 2.5,
-              "orbit": 85,
-              "speed": 1.1,
-              "summary": "主力收入，稳定且额度尚可，但浏览器端AI产品经理的日常改动对用户价值增量极小，努力工作也不会带来升职或跨越式增长",
-              "analysis": "这份工作的问题不在于收入不够，而在于——天花板已经被限定。作为浏览器端的AI产品经理，每天改功能、加功能、优化交互，但这些改动对用户的价值增量微乎其微。更深层的困境：即便拼命努力，努力讨好和向上管理，也不会导向升职、不会成为高层管理者、不会有跨越式的收入增长。这意味着工资是一条安全但有上限的路，它买断了你的时间和精力，却没有提供向上的通道。",
-              "insight": "工资的底层逻辑不是在奖励产出，而是在奖励可替代性的缺乏。当你做的改动几乎任何人都可以完成时，价值感丢失是必然的。路径不是更努力地工作，而是找到自己能创造不可替代价值的方向——哪怕很小，但只有你能做。",
-              "originalText": "工资—主力收入，稳定但价值感低。浏览器端AI产品经理，功能改动对用户增量极小。努力讨好和向上管理不会导向升职，没有跨越式收入增长的可能。"
-            },
-            {
-              "id": "stock",
-              "name": "股票投资",
-              "color": "#34d399",
-              "size": 2.0,
-              "orbit": 140,
-              "speed": 0.75,
-              "summary": "本金20万，需先保证不亏。两条核心逻辑——找低估或找成长，后者可借力国家十五五规划，但当前行情可能已错过",
-              "analysis": "股票的底层只有两种赚钱逻辑：要么找到被低估的便宜货提前买入（极难——全国几亿投资者盯着有限标的），要么找到未来有成长空间的公司提前布局。后者的一个可能入口是国家的五年规划——十五条产业链、新基建、国产替代——这些方向有政策背书，确定性相对更高。但问题在于：你可能已经错过了这一轮行情的最优入场点。当前更适合学习观察，先建立体系，而非急于操作。",
-              "insight": "20万的小本金是先天的容错优势。不要急于在错误的时间入场，把这段时间定义为——学习期。用模拟盘验证两条逻辑，建立自己的分析框架。真正的机会永远是下一轮，关键是机会来时你的弹药和认知都在。",
-              "originalText": "股票—20万本金。两条路：找低估（极难，全国几亿人在找）或找成长（可借力十五五规划）。当前行情可能已错过最佳入场点，需先观望学习。"
-            },
-            {
-              "id": "project",
-              "name": "项目/创业",
-              "color": "#f472b6",
-              "size": 2.0,
-              "orbit": 185,
-              "speed": 0.55,
-              "summary": "过去失败项目的心理阴影导致现在难以坚持超过一周，业余时间投入周期长、变量多，且非AI方向似乎意义不大",
-              "analysis": "这个问题的核心不是能力或方向，而是负反馈循环已经形成：过去失败的项目 → 打击信心和动力 → 新项目启动时潜意识已经预设失败 → 一周内遇到困难 → 验证了自己的预设 → 放弃。同时，业余时间做项目的结构性矛盾：非全职意味着周期被拉长2-3倍，而长周期意味着更多变量干扰——工作变动、精力波动、兴趣转移。非AI项目又感觉没意义，但AI项目自己也在质疑其价值——双重困境锁定。",
-              "insight": "打破循环的关键不是找到一个更好的项目，而是重新定义胜负。把目标从做出成功的产品改为完成一次完整的验证。用两周时间验证一个独立假设——不要求赚钱、不要求用户量、不要求完美，只要求有结论。这是项目能力的复健训练，而非创业。",
-              "originalText": "项目—过去失败→不敢长期坚持→最长不超一周。业余时间做周期太长、变量太多。非AI项目感觉没意义，但AI项目又在质疑其价值。双重困境。"
-            }
-          ]
-        },
-        {
-          "id": "income-logic",
-          "name": "收入底层逻辑恒星系",
-          "color": "#f59e0b",
-          "description": "关于价值创造、交换与收入的核心逻辑链",
-          "planets": [
-            {
-              "id": "value-exchange",
-              "name": "价值交换链",
-              "color": "#fbbf24",
-              "size": 2.5,
-              "orbit": 100,
-              "speed": 0.85,
-              "summary": "收入逻辑：创造价值→可交换→获取收入。核心矛盾在于——无法确认自己的价值到底存在于何处",
-              "analysis": "这套逻辑链本身正确，但它把你带到了一个尖锐的问题面前：你现在创造的价值在哪里？你改的功能、加的特性、做的优化——这些东西的受众是谁？解决了什么实际痛点？产生了多少可衡量的用户价值增量？当你回答不上来这些问题时，逻辑链会自动倒推：既然价值不确定，交换就不成立，收入封顶就是必然。这不是你不够努力，这是你在一个价值颗粒度太粗的系统里，个体的贡献被稀释到不可见。",
-              "insight": "解决方向不是在大系统里试图让自己更可见（那不可控），而是在大系统之外建立一个小闭环——哪怕就是帮一个人解决一个问题、写一个有洞察的分析、做了一个别人愿意付费的工具。价值在自己可控的范围内完成创造→交换的闭环。",
-              "originalText": "收入逻辑：有价值才能交换才能获得收入。但现在做的事情——浏览器端AI产品改动——影响不了行业、市场、更别说人类，怎么可能获得高薪。"
-            },
-            {
-              "id": "ai-value-paradox",
-              "name": "AI价值悖论",
-              "color": "#f97316",
-              "size": 2.3,
-              "orbit": 155,
-              "speed": 0.7,
-              "summary": "核心追问：AI如何体现价值？如何创造更大价值？如何让普通人也获得价值增量？",
-              "analysis": "你认可AI价值来自真实体验——智驾降低了你的驾驶门槛。但回到底层逻辑：你买车是因为住得离公司远，如果没有这个硬场景，智驾对你而言价值为零。这就引出了AI价值的根本悖论——人有多少，诉求取决于金钱、环境、身份。对普通人来说，衣食住行是最基本的，AI要想在这个基础上提供更大价值，首先需要让人有能力去追求更多诉求，而这往往需要先有金钱。AI的价值如果要惠及普通人，必须先解决一个前置问题：如何让普通人有能力和余力去接纳AI提供的增量。否则AI只是在为有消费力的人锦上添花。",
-              "insight": "AI对普通人的价值增量不在于技术有多强，而在于它能替代多少门槛、降低多少成本、释放多少时间。智驾降低了你开车的门槛——这是一个范例。思考方向不是做更强大的AI，而是找到普通人生活中那些被高门槛锁住的需求，用AI去解锁它们。",
-              "originalText": "AI的价值在哪？认可AI源于智驾体验，但这是降低了个人门槛。人的诉求取决于金钱/环境/身份，普通人需要先有基本生存保障，AI如何给普通人价值空间？"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "thinking",
-      "name": "思维模式星系",
-      "color": "#8b5cf6",
-      "glowColor": "rgba(139, 92, 246, 0.35)",
-      "description": "识别并分析自身的思维惯性、优势与盲区",
-      "starSystems": [
-        {
-          "id": "core-pattern",
-          "name": "核心思维特征恒星系",
-          "color": "#a78bfa",
-          "description": "已识别的高频思维模式与结构特征",
-          "planets": [
-            {
-              "id": "think-flow",
-              "name": "穿透式思维",
-              "color": "#818cf8",
-              "size": 2.4,
-              "orbit": 90,
-              "speed": 1.0,
-              "summary": "观察现象→直接抽象到本质→偏向悲观结论，跳过了验证执行中间层",
-              "analysis": "你能快速把工资的困境抽象为价值交换链条问题，把股票抽象为两种底层逻辑，把项目抽象为负反馈循环——这是极少数人具备的穿透力。但惯性在于：抽象完成后你倾向于得出一个偏悲观的结论（没有价值→不可能高薪），而不是追问下一步（在现有约束下什么是可以验证的假设）。",
-              "insight": "穿透力是你的超能力，但如果没有验证环节做刹车，它会把你一路带到悲观的终点。在观察到结论之间强行插入一个问题：这个结论在什么条件下不成立？找到那个反例，就是你的突破口。",
-              "originalText": "思维特征：观察→抽象→悲观，跳过验证执行层。能快速看到本质，但结论倾向于负面，缺乏在现实中验证的步骤。"
-            },
-            {
-              "id": "skip-execution",
-              "name": "执行断层",
-              "color": "#c084fc",
-              "size": 2.0,
-              "orbit": 145,
-              "speed": 0.65,
-              "summary": "思维和行动之间存在结构性断层：大脑已推演出悲观结果→行动失去意义→项目不超过一周",
-              "analysis": "你说现在一个项目连一周都坚持不了。这不是意志力问题，而是认知系统已经把结局计算好了——既然大概率失败，为什么还要投入？这个逻辑在纯理性层面是成立的，但它在现实中漏掉了最关键的东西：现实反馈可以改变你最初的计算参数。你推演使用的那些假设，放到现实里可能完全不成立。但因为你没做，所以你永远不会发现这一点。",
-              "insight": "目标不是坚持更长，而是把证明周期降到更低。一周不是失败的标志——你可以重新定义：一周能跑完一个独立验证就是成功。把循环从启动→验证→推演失败→放弃，改为启动→验证→获得数据→调整推演→继续。",
-              "originalText": "执行断层：过去失败→预设失败→缺乏动力→最长不超一周。业余时间做周期长，长周期变量多，对心态影响大。"
-            }
-          ]
-        },
-        {
-          "id": "blindspots",
-          "name": "思维盲区恒星系",
-          "color": "#e879f9",
-          "description": "已识别的三类认知盲区",
-          "planets": [
-            {
-              "id": "blindspot-value",
-              "name": "价值尺度缩小",
-              "color": "#c084fc",
-              "size": 1.5,
-              "orbit": 80,
-              "speed": 1.1,
-              "summary": "倾向用宏大标准衡量价值（影响行业/市场/人类），使得日常贡献在自我评价中被清零",
-              "analysis": "你用一套极高标准的价值尺（影响行业、市场、人类）来衡量自己的工作，然后得出没有价值的结论。但这个尺子本身就是有问题的——大多数人的工作都不满足这个标准，但社会仍然运转。问题不在于价值不存在，而在于你的价值尺让你看不见微小的价值。",
-              "insight": "价值有不同量级——1对1的价值、1对10的价值、1对100万的价值都算价值。你不需要立刻跳到影响全人类，只需要找到一个你能影响的具体人、具体场景。",
-              "originalText": "盲区一：用影响行业/市场/人类的标准衡量价值→日常贡献被清零"
-            },
-            {
-              "id": "blindspot-stock",
-              "name": "股票二元化",
-              "color": "#a78bfa",
-              "size": 1.5,
-              "orbit": 120,
-              "speed": 0.8,
-              "summary": "将投资策略简化为低估和成长两种，实际上存在大量中间策略和组合方法",
-              "analysis": "你说的两种逻辑本身是对的，但投资不是非要选一种。十五五规划可以给你方向感（成长逻辑），但入场时机需要估值判断（低估逻辑）。两者组合才是完整策略：在国家方向中找到被暂时低估的标的。",
-              "insight": "不要二选一，找到两种逻辑的交集：在国家规划方向上，哪些公司当前估值处于合理甚至偏低区间。",
-              "originalText": "盲区二：股票只有两种逻辑（低估或成长），忽略了策略的连续谱和组合方法"
-            },
-            {
-              "id": "blindspot-ai",
-              "name": "AI方向锁定",
-              "color": "#d8b4fe",
-              "size": 1.5,
-              "orbit": 160,
-              "speed": 0.65,
-              "summary": "默认项目必须和AI相关才有意义，但自己也在质疑AI对普通人的价值——形成逻辑自锁",
-              "analysis": "你陷入了一个有趣的悖论：认为非AI项目没意义，但AI项目你又在质疑其底层价值。这两个信念放在一起的结果就是——所有方向都不对。这不是方向问题，是信念问题。你需要先解开AI价值悖论这个锁，才能重新评估项目的方向。",
-              "insight": "先解决AI价值悖论的问题——找到AI在普通人生活中的一个真实价值锚点（像智驾对你那样）。然后基于这个锚点设计项目。",
-              "originalText": "盲区三：非AI项目没意义，但AI价值又在质疑中→逻辑自锁，所有方向都不对"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "value-cognition",
-      "name": "价值认知星系",
-      "color": "#06b6d4",
-      "glowColor": "rgba(6, 182, 212, 0.35)",
-      "description": "对AI价值、个人价值创造路径与可探索方向的深度认知",
-      "starSystems": [
-        {
-          "id": "ai-cognition",
-          "name": "AI价值思考恒星系",
-          "color": "#22d3ee",
-          "description": "源自真实体验的AI价值判断与深层追问",
-          "planets": [
-            {
-              "id": "ai-recognize",
-              "name": "真实的AI认同",
-              "color": "#38bdf8",
-              "size": 2.0,
-              "orbit": 90,
-              "speed": 0.9,
-              "summary": "对AI价值的认可来自具身体验——智驾降低了驾驶门槛，让你切实感受到技术如何释放个人能力",
-              "analysis": "你的AI认同有一个非常扎实的锚点：不是因为趋势、不是因为别人都在做、不是因为FOMO——而是因为你自己体验到了。买车→住处远→需要开车→智驾降低门槛→切身体会到AI的价值。这个链条的每一环都是真实的。这比任何理论都更有说服力，也让你在面对AI泡沫叙事时保持了难得的清醒。",
-              "insight": "智驾对你的价值模式可以迁移到其他场景：AI的价值不在于有多强大，而在于它消除了普通人生活中的哪道门槛。只降低门槛的AI才是真正惠及普通人的AI。",
-              "originalText": "认可AI的原因：买了车，住处离公司远，智驾降低了驾驶门槛→体验到了技术释放个人能力的真实感。"
-            },
-            {
-              "id": "ai-doubt",
-              "name": "普通人的AI增量",
-              "color": "#7dd3fc",
-              "size": 1.8,
-              "orbit": 145,
-              "speed": 0.6,
-              "summary": "质疑核心：AI如何给普通人提供价值？人的诉求首先受制于金钱/环境/身份，AI须先帮人解决基础问题",
-              "analysis": "你提出了一个被行业叙事刻意回避的问题：如果一个人连基本生存都有压力，AI对他来说意味着什么？也许AI能写一首诗、画一张图、生成一段代码——但这个人需要的是吃饭、住房、出行、医疗。AI要真正产生普惠价值，不能停留在让有能力的人更有能力，而是要降低那些最基本需求的满足成本。",
-              "insight": "AI的普惠路径：不是在现有需求上叠加智能，而是把原本昂贵的东西变得便宜——比如把好的教育、好的医疗、好的法律服务用AI的成本结构重新提供。",
-              "originalText": "AI如何对普通人产生价值？人的诉求取决于金钱/环境/身份，衣食住行是基础。AI想要创造更大价值，需先帮人解决基础问题或降低基础成本。"
-            }
-          ]
-        },
-        {
-          "id": "expand-directions",
-          "name": "可探索方向恒星系",
-          "color": "#2dd4bf",
-          "description": "基于分析可推进的四个方向",
-          "planets": [
-            {
-              "id": "dir-validate",
-              "name": "验证式产品",
-              "color": "#5eead4",
-              "size": 1.4,
-              "orbit": 80,
-              "speed": 1.05,
-              "summary": "放弃宏大产品构想，用两周时间跑一个独立验证循环——不追求成功，只追求有结论",
-              "analysis": "这和你的执行断层直接相关。两周是一个可以管理的时间周期：不会因为太长而变量失控，也不会因为太短而没有深度。关键是把目标从成功转为有结论——证明或者证伪一个假设，都是有价值的收获。",
-              "insight": "两周验证的精髓：设定一个可被证伪的假设。不是我想做一个好产品而是如果做出来，X类用户会愿意为此付出Y。两周后回答是或否。",
-              "originalText": "可探索方向一：两周验证循环，用最小代价获得结论，而非试图建成完整产品"
-            },
-            {
-              "id": "dir-scene-diary",
-              "name": "场景日记",
-              "color": "#2dd4bf",
-              "size": 1.3,
-              "orbit": 120,
-              "speed": 0.75,
-              "summary": "每天记录一个如果这样就好了的场景，特别关注普通人的高门槛需求，积累AI应用的灵感库",
-              "analysis": "你对不便的敏感度是顶级的产品优势。场景日记把这个能力系统化，而且因为你已经开始思考AI价值的本质（降低门槛），你的观察会比别人更精准。",
-              "insight": "关注普通人的场景，而非精英的场景。菜市场摊主、外卖骑手、带娃的父母——他们日常中最想被解决的问题是什么。答案就在这里。",
-              "originalText": "可探索方向二：场景日记，系统化记录日常生活的不便之处，积累AI应用灵感"
-            },
-            {
-              "id": "dir-leverage",
-              "name": "存量杠杆",
-              "color": "#14b8a6",
-              "size": 1.4,
-              "orbit": 160,
-              "speed": 0.6,
-              "summary": "AI产品经理的身份、深度思考能力、行业网络——这些都是存量，关键在于如何组合产生乘积效应",
-              "analysis": "你不是从零开始。AI产品经理意味着你理解技术边界和用户需求的交界处——这正是AI应用最稀缺的认知位置。深度思考能力让你能看到别人看不到的连接。把AI认知+产品能力+深度思考组合成一个输出（比如分析报告、知识产品），比你单独做任何一件事都有价值。",
-              "insight": "存量杠杆的诀窍不是找到全新的领域，而是把自己的三样东西放在一起，看看能组合出什么——这就是你的独特定位。",
-              "originalText": "可探索方向三：存量杠杆——AI PM的认知位置+深度思考+行业网络，组合产生乘积效应"
-            },
-            {
-              "id": "dir-index",
-              "name": "指数定投",
-              "color": "#0d9488",
-              "size": 1.2,
-              "orbit": 200,
-              "speed": 0.5,
-              "summary": "股票投资可以简化为定投策略，释放认知精力到更高回报率的方向",
-              "analysis": "你只有20万本金且还在学习阶段，不太可能在股票上获得超过日常工作投入的回报。把投资简化为指数定投，把腾出来的精力全部投入到项目和认知积累中——这才是你当前最大的ROI。当你其他方向跑通后，追加的本金才会让股票的复利效果真正显现。",
-              "insight": "当前阶段股票的核心任务不是赚钱而是不亏且学到经验。定投指数是最低维护成本的方案，让你聚焦于更重要的变量。",
-              "originalText": "可探索方向四：指数定投简化投资，释放认知精力到更高回报率的项目和认知积累"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "framework",
-      "name": "认知框架星系",
-      "color": "#3b82f6",
-      "glowColor": "rgba(59, 130, 246, 0.35)",
-      "description": "C-O-D-E-R方法论与AI五重角色——知识管理的操作系统",
-      "starSystems": [
-        {
-          "id": "coder-model",
-          "name": "C-O-D-E-R 模型",
-          "color": "#60a5fa",
-          "description": "知识管理——捕捉、整理、深化、输出、回顾",
-          "planets": [
-            {
-              "id": "capture",
-              "name": "捕捉",
-              "color": "#3b82f6",
-              "size": 1.5,
-              "orbit": 80,
-              "speed": 1.1,
-              "summary": "3秒内记录，不评判不筛选，清空大脑工作记忆",
-              "analysis": "所有思考的起点。今天你对收入、股票、AI的深入思考，在发生的瞬间就应该被捕捉——否则就会被后续的信息覆盖。",
-              "insight": "脑子里产生的每一个有价值的问题和连接，都是捕捉的信号。",
-              "originalText": "Capture—随时捕捉想法，0摩擦力记录"
-            },
-            {
-              "id": "organize",
-              "name": "整理",
-              "color": "#8b5cf6",
-              "size": 1.5,
-              "orbit": 125,
-              "speed": 0.75,
-              "summary": "让碎片信息找到星系归属——收入认知、思维模式、价值认知、认知框架",
-              "analysis": "你现在看到的这个宇宙页面就是整理的成果。每次你把想法告诉我，我都会拆解、分类、放入对应的星系和星球。",
-              "insight": "好的分类让零散的想法产生结构，结构产生新的连接。",
-              "originalText": "Organize—五域分类，让碎片找到自己的位置"
-            },
-            {
-              "id": "deepen",
-              "name": "深化",
-              "color": "#f59e0b",
-              "size": 2.0,
-              "orbit": 170,
-              "speed": 0.6,
-              "summary": "AI帮你追问三层、切换视角、识别盲区——把碎片种成认知树",
-              "analysis": "你对AI价值悖论的追问、对股票两种逻辑的拆解、对项目负反馈循环的识别——这些都是深化的成果。AI不是给你新答案，而是帮你把已有的思考推进得更深。",
-              "insight": "你的每一次深入追问都在这个环节发生。你从收入结构追问到价值本质，从价值本质追问到AI悖论——这就是深化。",
-              "originalText": "Deepen—追问/拓展/结构化/情绪处理，把碎片推进到认知"
-            },
-            {
-              "id": "express",
-              "name": "输出",
-              "color": "#10b981",
-              "size": 1.4,
-              "orbit": 215,
-              "speed": 0.5,
-              "summary": "从碎片到完整表达——你在这里看到的一切都是输出的产物",
-              "analysis": "你现在阅读的每一个知识点——概述、深度分析、洞见——都是将原始想法整理成结构化输出的结果。输出的过程本身就是认知的固化和进化。",
-              "insight": "写出来比想清楚更重要——因为写出来的过程中你会发现，原来你以为想清楚的东西还有很多漏洞。",
-              "originalText": "Express—从碎片到完整文章，输出是最好的内化"
-            },
-            {
-              "id": "review",
-              "name": "回顾",
-              "color": "#ef4444",
-              "size": 1.3,
-              "orbit": 255,
-              "speed": 0.4,
-              "summary": "周期性回顾思维模式的演变——今天和三个月前的你，关注的东西有什么变化",
-              "analysis": "回到这个宇宙，看看哪些星球变大了（思考更深入了）、哪些新星球出现了（新认知产生了）、哪些星系之间的连接增强了。回顾让你看到自己的认知进化轨迹。",
-              "insight": "那些反复被你点击、反复让你驻足的星球，就是你真正应该投入的方向。",
-              "originalText": "Review—日/周/月回顾，发现认知模式的演变"
-            }
-          ]
-        },
-        {
-          "id": "ai-roles",
-          "name": "AI五重角色",
-          "color": "#93c5fd",
-          "description": "AI在这个框架中扮演的五种角色",
-          "planets": [
-            {
-              "id": "role-guide",
-              "name": "引导者",
-              "color": "#60a5fa",
-              "size": 1.3,
-              "orbit": 75,
-              "speed": 1.15,
-              "summary": "问对问题，帮你找到自己的答案",
-              "analysis": "当你说AI的价值悖论时，我没有直接给你答案，而是帮你梳理逻辑链——这就是引导。",
-              "insight": "最好的引导不是给答案，是让你自己看到逻辑的完整路径。"
-            },
-            {
-              "id": "role-analyst",
-              "name": "分析师",
-              "color": "#8b5cf6",
-              "size": 1.3,
-              "orbit": 120,
-              "speed": 0.8,
-              "summary": "发现思维模式、盲区、跨领域连接",
-              "analysis": "你的三大盲区、思维穿透+执行断层的组合特征——这些都是分析的结果。",
-              "insight": "连接是认知提升的加速器——把收入和思维模式放在一起看，才能看到完整图景。"
-            },
-            {
-              "id": "role-collaborator",
-              "name": "协作者",
-              "color": "#10b981",
-              "size": 1.3,
-              "orbit": 160,
-              "speed": 0.65,
-              "summary": "帮你把碎片组织成完整的知识结构",
-              "analysis": "你现在看到的知识星系，就是我帮你把零散想法组织成结构化输出的结果。",
-              "insight": "结构本身就有力量——它让混沌变得可导航。"
-            },
-            {
-              "id": "role-mirror",
-              "name": "镜子",
-              "color": "#f59e0b",
-              "size": 1.5,
-              "orbit": 200,
-              "speed": 0.5,
-              "summary": "反映你自己没看见的模式和倾向",
-              "analysis": "当你反复提到价值两个字时，镜子告诉你：价值是你最核心的关切，出现在收入、AI、盲区三个星系中。",
-              "insight": "高频词汇就是内心罗盘——你的高频词是价值和普通人。"
-            },
-            {
-              "id": "role-steward",
-              "name": "管家",
-              "color": "#ef4444",
-              "size": 1.2,
-              "orbit": 240,
-              "speed": 0.4,
-              "summary": "维护知识体系健康，更新内容、去重、保备份",
-              "analysis": "每次你分享想法，管家就更新这个宇宙——添加星球、丰富内容、保持结构清晰。",
-              "insight": "好的知识系统不需要你维护，它会自己在对话中成长。"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+<script type="application/json" id="cosmos-json">
+{"version": "1.1", "lastUpdated": "2026-05-24", "galaxies": [{"id": "income", "name": "收入认知星系", "color": "#f59e0b", "glowColor": "rgba(245, 158, 11, 0.35)", "description": "关于收入来源结构、底层逻辑与价值创造的认知分析", "starSystems": [{"id": "income-pillars", "name": "收入三支柱恒星系", "color": "#fbbf24", "description": "工资、股票、项目三大收入来源的现状与瓶颈分析", "planets": [{"id": "salary", "name": "工资", "color": "#60a5fa", "size": 2.5, "orbit": 85, "speed": 1.1, "summary": "主力收入，稳定且额度尚可，但浏览器端AI产品经理的日常改动对用户价值增量极小，努力工作也不会带来升职或跨越式增长", "analysis": "这份工作的问题不在于收入不够，而在于——天花板已经被限定。作为浏览器端的AI产品经理，每天改功能、加功能、优化交互，但这些改动对用户的价值增量微乎其微。更深层的困境：即便拼命努力，努力讨好和向上管理，也不会导向升职、不会成为高层管理者、不会有跨越式的收入增长。这意味着工资是一条安全但有上限的路，它买断了你的时间和精力，却没有提供向上的通道。", "insight": "工资的底层逻辑不是在奖励产出，而是在奖励可替代性的缺乏。当你做的改动几乎任何人都可以完成时，价值感丢失是必然的。路径不是更努力地工作，而是找到自己能创造不可替代价值的方向——哪怕很小，但只有你能做。", "originalText": "工资—主力收入，稳定但价值感低。浏览器端AI产品经理，功能改动对用户增量极小。努力讨好和向上管理不会导向升职，没有跨越式收入增长的可能。"}, {"id": "stock", "name": "股票投资", "color": "#34d399", "size": 2.0, "orbit": 140, "speed": 0.75, "summary": "本金20万，需先保证不亏。两条核心逻辑——找低估或找成长，后者可借力国家十五五规划，但当前行情可能已错过", "analysis": "股票的底层只有两种赚钱逻辑：要么找到被低估的便宜货提前买入（极难——全国几亿投资者盯着有限标的），要么找到未来有成长空间的公司提前布局。后者的一个可能入口是国家的五年规划——十五条产业链、新基建、国产替代——这些方向有政策背书，确定性相对更高。但问题在于：你可能已经错过了这一轮行情的最优入场点。当前更适合学习观察，先建立体系，而非急于操作。", "insight": "20万的小本金是先天的容错优势。不要急于在错误的时间入场，把这段时间定义为——学习期。用模拟盘验证两条逻辑，建立自己的分析框架。真正的机会永远是下一轮，关键是机会来时你的弹药和认知都在。", "originalText": "股票—20万本金。两条路：找低估（极难，全国几亿人在找）或找成长（可借力十五五规划）。当前行情可能已错过最佳入场点，需先观望学习。"}, {"id": "project", "name": "项目/创业", "color": "#f472b6", "size": 2.0, "orbit": 185, "speed": 0.55, "summary": "过去失败项目的心理阴影导致现在难以坚持超过一周，业余时间投入周期长、变量多，且非AI方向似乎意义不大", "analysis": "这个问题的核心不是能力或方向，而是负反馈循环已经形成：过去失败的项目 → 打击信心和动力 → 新项目启动时潜意识已经预设失败 → 一周内遇到困难 → 验证了自己的预设 → 放弃。同时，业余时间做项目的结构性矛盾：非全职意味着周期被拉长2-3倍，而长周期意味着更多变量干扰——工作变动、精力波动、兴趣转移。非AI项目又感觉没意义，但AI项目自己也在质疑其价值——双重困境锁定。", "insight": "打破循环的关键不是找到一个更好的项目，而是重新定义胜负。把目标从做出成功的产品改为完成一次完整的验证。用两周时间验证一个独立假设——不要求赚钱、不要求用户量、不要求完美，只要求有结论。这是项目能力的复健训练，而非创业。", "originalText": "项目—过去失败→不敢长期坚持→最长不超一周。业余时间做周期太长、变量太多。非AI项目感觉没意义，但AI项目又在质疑其价值。双重困境。"}]}, {"id": "income-logic", "name": "收入底层逻辑恒星系", "color": "#f59e0b", "description": "关于价值创造、交换与收入的核心逻辑链", "planets": [{"id": "value-exchange", "name": "价值交换链", "color": "#fbbf24", "size": 2.5, "orbit": 100, "speed": 0.85, "summary": "收入逻辑：创造价值→可交换→获取收入。核心矛盾在于——无法确认自己的价值到底存在于何处", "analysis": "这套逻辑链本身正确，但它把你带到了一个尖锐的问题面前：你现在创造的价值在哪里？你改的功能、加的特性、做的优化——这些东西的受众是谁？解决了什么实际痛点？产生了多少可衡量的用户价值增量？当你回答不上来这些问题时，逻辑链会自动倒推：既然价值不确定，交换就不成立，收入封顶就是必然。这不是你不够努力，这是你在一个价值颗粒度太粗的系统里，个体的贡献被稀释到不可见。", "insight": "解决方向不是在大系统里试图让自己更可见（那不可控），而是在大系统之外建立一个小闭环——哪怕就是帮一个人解决一个问题、写一个有洞察的分析、做了一个别人愿意付费的工具。价值在自己可控的范围内完成创造→交换的闭环。", "originalText": "收入逻辑：有价值才能交换才能获得收入。但现在做的事情——浏览器端AI产品改动——影响不了行业、市场、更别说人类，怎么可能获得高薪。"}, {"id": "ai-value-paradox", "name": "AI价值悖论", "color": "#f97316", "size": 2.3, "orbit": 155, "speed": 0.7, "summary": "核心追问：AI如何体现价值？如何创造更大价值？如何让普通人也获得价值增量？", "analysis": "你认可AI价值来自真实体验——智驾降低了你的驾驶门槛。但回到底层逻辑：你买车是因为住得离公司远，如果没有这个硬场景，智驾对你而言价值为零。这就引出了AI价值的根本悖论——人有多少，诉求取决于金钱、环境、身份。对普通人来说，衣食住行是最基本的，AI要想在这个基础上提供更大价值，首先需要让人有能力去追求更多诉求，而这往往需要先有金钱。AI的价值如果要惠及普通人，必须先解决一个前置问题：如何让普通人有能力和余力去接纳AI提供的增量。否则AI只是在为有消费力的人锦上添花。", "insight": "AI对普通人的价值增量不在于技术有多强，而在于它能替代多少门槛、降低多少成本、释放多少时间。智驾降低了你开车的门槛——这是一个范例。思考方向不是做更强大的AI，而是找到普通人生活中那些被高门槛锁住的需求，用AI去解锁它们。", "originalText": "AI的价值在哪？认可AI源于智驾体验，但这是降低了个人门槛。人的诉求取决于金钱/环境/身份，普通人需要先有基本生存保障，AI如何给普通人价值空间？"}]}]}, {"id": "thinking", "name": "思维模式星系", "color": "#8b5cf6", "glowColor": "rgba(139, 92, 246, 0.35)", "description": "识别并分析自身的思维惯性、优势与盲区", "starSystems": [{"id": "core-pattern", "name": "核心思维特征恒星系", "color": "#a78bfa", "description": "已识别的高频思维模式与结构特征", "planets": [{"id": "think-flow", "name": "穿透式思维", "color": "#818cf8", "size": 2.4, "orbit": 90, "speed": 1.0, "summary": "观察现象→直接抽象到本质→偏向悲观结论，跳过了验证执行中间层", "analysis": "你能快速把工资的困境抽象为价值交换链条问题，把股票抽象为两种底层逻辑，把项目抽象为负反馈循环——这是极少数人具备的穿透力。但惯性在于：抽象完成后你倾向于得出一个偏悲观的结论（没有价值→不可能高薪），而不是追问下一步（在现有约束下什么是可以验证的假设）。", "insight": "穿透力是你的超能力，但如果没有验证环节做刹车，它会把你一路带到悲观的终点。在观察到结论之间强行插入一个问题：这个结论在什么条件下不成立？找到那个反例，就是你的突破口。", "originalText": "思维特征：观察→抽象→悲观，跳过验证执行层。能快速看到本质，但结论倾向于负面，缺乏在现实中验证的步骤。"}, {"id": "skip-execution", "name": "执行断层", "color": "#c084fc", "size": 2.0, "orbit": 145, "speed": 0.65, "summary": "思维和行动之间存在结构性断层：大脑已推演出悲观结果→行动失去意义→项目不超过一周", "analysis": "你说现在一个项目连一周都坚持不了。这不是意志力问题，而是认知系统已经把结局计算好了——既然大概率失败，为什么还要投入？这个逻辑在纯理性层面是成立的，但它在现实中漏掉了最关键的东西：现实反馈可以改变你最初的计算参数。你推演使用的那些假设，放到现实里可能完全不成立。但因为你没做，所以你永远不会发现这一点。", "insight": "目标不是坚持更长，而是把证明周期降到更低。一周不是失败的标志——你可以重新定义：一周能跑完一个独立验证就是成功。把循环从启动→验证→推演失败→放弃，改为启动→验证→获得数据→调整推演→继续。", "originalText": "执行断层：过去失败→预设失败→缺乏动力→最长不超一周。业余时间做周期长，长周期变量多，对心态影响大。"}]}, {"id": "blindspots", "name": "思维盲区恒星系", "color": "#e879f9", "description": "已识别的三类认知盲区", "planets": [{"id": "blindspot-value", "name": "价值尺度缩小", "color": "#c084fc", "size": 1.5, "orbit": 80, "speed": 1.1, "summary": "倾向用宏大标准衡量价值（影响行业/市场/人类），使得日常贡献在自我评价中被清零", "analysis": "你用一套极高标准的价值尺（影响行业、市场、人类）来衡量自己的工作，然后得出没有价值的结论。但这个尺子本身就是有问题的——大多数人的工作都不满足这个标准，但社会仍然运转。问题不在于价值不存在，而在于你的价值尺让你看不见微小的价值。", "insight": "价值有不同量级——1对1的价值、1对10的价值、1对100万的价值都算价值。你不需要立刻跳到影响全人类，只需要找到一个你能影响的具体人、具体场景。", "originalText": "盲区一：用影响行业/市场/人类的标准衡量价值→日常贡献被清零"}, {"id": "blindspot-stock", "name": "股票二元化", "color": "#a78bfa", "size": 1.5, "orbit": 120, "speed": 0.8, "summary": "将投资策略简化为低估和成长两种，实际上存在大量中间策略和组合方法", "analysis": "你说的两种逻辑本身是对的，但投资不是非要选一种。十五五规划可以给你方向感（成长逻辑），但入场时机需要估值判断（低估逻辑）。两者组合才是完整策略：在国家方向中找到被暂时低估的标的。", "insight": "不要二选一，找到两种逻辑的交集：在国家规划方向上，哪些公司当前估值处于合理甚至偏低区间。", "originalText": "盲区二：股票只有两种逻辑（低估或成长），忽略了策略的连续谱和组合方法"}, {"id": "blindspot-ai", "name": "AI方向锁定", "color": "#d8b4fe", "size": 1.5, "orbit": 160, "speed": 0.65, "summary": "默认项目必须和AI相关才有意义，但自己也在质疑AI对普通人的价值——形成逻辑自锁", "analysis": "你陷入了一个有趣的悖论：认为非AI项目没意义，但AI项目你又在质疑其底层价值。这两个信念放在一起的结果就是——所有方向都不对。这不是方向问题，是信念问题。你需要先解开AI价值悖论这个锁，才能重新评估项目的方向。", "insight": "先解决AI价值悖论的问题——找到AI在普通人生活中的一个真实价值锚点（像智驾对你那样）。然后基于这个锚点设计项目。", "originalText": "盲区三：非AI项目没意义，但AI价值又在质疑中→逻辑自锁，所有方向都不对"}]}]}, {"id": "value-cognition", "name": "价值认知星系", "color": "#06b6d4", "glowColor": "rgba(6, 182, 212, 0.35)", "description": "对AI价值、个人价值创造路径与可探索方向的深度认知", "starSystems": [{"id": "ai-cognition", "name": "AI价值思考恒星系", "color": "#22d3ee", "description": "源自真实体验的AI价值判断与深层追问", "planets": [{"id": "ai-recognize", "name": "真实的AI认同", "color": "#38bdf8", "size": 2.0, "orbit": 90, "speed": 0.9, "summary": "对AI价值的认可来自具身体验——智驾降低了驾驶门槛，让你切实感受到技术如何释放个人能力", "analysis": "你的AI认同有一个非常扎实的锚点：不是因为趋势、不是因为别人都在做、不是因为FOMO——而是因为你自己体验到了。买车→住处远→需要开车→智驾降低门槛→切身体会到AI的价值。这个链条的每一环都是真实的。这比任何理论都更有说服力，也让你在面对AI泡沫叙事时保持了难得的清醒。", "insight": "智驾对你的价值模式可以迁移到其他场景：AI的价值不在于有多强大，而在于它消除了普通人生活中的哪道门槛。只降低门槛的AI才是真正惠及普通人的AI。", "originalText": "认可AI的原因：买了车，住处离公司远，智驾降低了驾驶门槛→体验到了技术释放个人能力的真实感。"}, {"id": "ai-doubt", "name": "普通人的AI增量", "color": "#7dd3fc", "size": 1.8, "orbit": 145, "speed": 0.6, "summary": "质疑核心：AI如何给普通人提供价值？人的诉求首先受制于金钱/环境/身份，AI须先帮人解决基础问题", "analysis": "你提出了一个被行业叙事刻意回避的问题：如果一个人连基本生存都有压力，AI对他来说意味着什么？也许AI能写一首诗、画一张图、生成一段代码——但这个人需要的是吃饭、住房、出行、医疗。AI要真正产生普惠价值，不能停留在让有能力的人更有能力，而是要降低那些最基本需求的满足成本。", "insight": "AI的普惠路径：不是在现有需求上叠加智能，而是把原本昂贵的东西变得便宜——比如把好的教育、好的医疗、好的法律服务用AI的成本结构重新提供。", "originalText": "AI如何对普通人产生价值？人的诉求取决于金钱/环境/身份，衣食住行是基础。AI想要创造更大价值，需先帮人解决基础问题或降低基础成本。"}]}, {"id": "expand-directions", "name": "可探索方向恒星系", "color": "#2dd4bf", "description": "基于分析可推进的四个方向", "planets": [{"id": "dir-validate", "name": "验证式产品", "color": "#5eead4", "size": 1.4, "orbit": 80, "speed": 1.05, "summary": "放弃宏大产品构想，用两周时间跑一个独立验证循环——不追求成功，只追求有结论", "analysis": "这和你的执行断层直接相关。两周是一个可以管理的时间周期：不会因为太长而变量失控，也不会因为太短而没有深度。关键是把目标从成功转为有结论——证明或者证伪一个假设，都是有价值的收获。", "insight": "两周验证的精髓：设定一个可被证伪的假设。不是我想做一个好产品而是如果做出来，X类用户会愿意为此付出Y。两周后回答是或否。", "originalText": "可探索方向一：两周验证循环，用最小代价获得结论，而非试图建成完整产品"}, {"id": "dir-scene-diary", "name": "场景日记", "color": "#2dd4bf", "size": 1.3, "orbit": 120, "speed": 0.75, "summary": "每天记录一个如果这样就好了的场景，特别关注普通人的高门槛需求，积累AI应用的灵感库", "analysis": "你对不便的敏感度是顶级的产品优势。场景日记把这个能力系统化，而且因为你已经开始思考AI价值的本质（降低门槛），你的观察会比别人更精准。", "insight": "关注普通人的场景，而非精英的场景。菜市场摊主、外卖骑手、带娃的父母——他们日常中最想被解决的问题是什么。答案就在这里。", "originalText": "可探索方向二：场景日记，系统化记录日常生活的不便之处，积累AI应用灵感"}, {"id": "dir-leverage", "name": "存量杠杆", "color": "#14b8a6", "size": 1.4, "orbit": 160, "speed": 0.6, "summary": "AI产品经理的身份、深度思考能力、行业网络——这些都是存量，关键在于如何组合产生乘积效应", "analysis": "你不是从零开始。AI产品经理意味着你理解技术边界和用户需求的交界处——这正是AI应用最稀缺的认知位置。深度思考能力让你能看到别人看不到的连接。把AI认知+产品能力+深度思考组合成一个输出（比如分析报告、知识产品），比你单独做任何一件事都有价值。", "insight": "存量杠杆的诀窍不是找到全新的领域，而是把自己的三样东西放在一起，看看能组合出什么——这就是你的独特定位。", "originalText": "可探索方向三：存量杠杆——AI PM的认知位置+深度思考+行业网络，组合产生乘积效应"}, {"id": "dir-index", "name": "指数定投", "color": "#0d9488", "size": 1.2, "orbit": 200, "speed": 0.5, "summary": "股票投资可以简化为定投策略，释放认知精力到更高回报率的方向", "analysis": "你只有20万本金且还在学习阶段，不太可能在股票上获得超过日常工作投入的回报。把投资简化为指数定投，把腾出来的精力全部投入到项目和认知积累中——这才是你当前最大的ROI。当你其他方向跑通后，追加的本金才会让股票的复利效果真正显现。", "insight": "当前阶段股票的核心任务不是赚钱而是不亏且学到经验。定投指数是最低维护成本的方案，让你聚焦于更重要的变量。", "originalText": "可探索方向四：指数定投简化投资，释放认知精力到更高回报率的项目和认知积累"}]}]}, {"id": "framework", "name": "认知框架星系", "color": "#3b82f6", "glowColor": "rgba(59, 130, 246, 0.35)", "description": "C-O-D-E-R方法论与AI五重角色——知识管理的操作系统", "starSystems": [{"id": "coder-model", "name": "C-O-D-E-R 模型", "color": "#60a5fa", "description": "知识管理——捕捉、整理、深化、输出、回顾", "planets": [{"id": "capture", "name": "捕捉", "color": "#3b82f6", "size": 1.5, "orbit": 80, "speed": 1.1, "summary": "3秒内记录，不评判不筛选，清空大脑工作记忆", "analysis": "所有思考的起点。今天你对收入、股票、AI的深入思考，在发生的瞬间就应该被捕捉——否则就会被后续的信息覆盖。", "insight": "脑子里产生的每一个有价值的问题和连接，都是捕捉的信号。", "originalText": "Capture—随时捕捉想法，0摩擦力记录"}, {"id": "organize", "name": "整理", "color": "#8b5cf6", "size": 1.5, "orbit": 125, "speed": 0.75, "summary": "让碎片信息找到星系归属——收入认知、思维模式、价值认知、认知框架", "analysis": "你现在看到的这个宇宙页面就是整理的成果。每次你把想法告诉我，我都会拆解、分类、放入对应的星系和星球。", "insight": "好的分类让零散的想法产生结构，结构产生新的连接。", "originalText": "Organize—五域分类，让碎片找到自己的位置"}, {"id": "deepen", "name": "深化", "color": "#f59e0b", "size": 2.0, "orbit": 170, "speed": 0.6, "summary": "AI帮你追问三层、切换视角、识别盲区——把碎片种成认知树", "analysis": "你对AI价值悖论的追问、对股票两种逻辑的拆解、对项目负反馈循环的识别——这些都是深化的成果。AI不是给你新答案，而是帮你把已有的思考推进得更深。", "insight": "你的每一次深入追问都在这个环节发生。你从收入结构追问到价值本质，从价值本质追问到AI悖论——这就是深化。", "originalText": "Deepen—追问/拓展/结构化/情绪处理，把碎片推进到认知"}, {"id": "express", "name": "输出", "color": "#10b981", "size": 1.4, "orbit": 215, "speed": 0.5, "summary": "从碎片到完整表达——你在这里看到的一切都是输出的产物", "analysis": "你现在阅读的每一个知识点——概述、深度分析、洞见——都是将原始想法整理成结构化输出的结果。输出的过程本身就是认知的固化和进化。", "insight": "写出来比想清楚更重要——因为写出来的过程中你会发现，原来你以为想清楚的东西还有很多漏洞。", "originalText": "Express—从碎片到完整文章，输出是最好的内化"}, {"id": "review", "name": "回顾", "color": "#ef4444", "size": 1.3, "orbit": 255, "speed": 0.4, "summary": "周期性回顾思维模式的演变——今天和三个月前的你，关注的东西有什么变化", "analysis": "回到这个宇宙，看看哪些星球变大了（思考更深入了）、哪些新星球出现了（新认知产生了）、哪些星系之间的连接增强了。回顾让你看到自己的认知进化轨迹。", "insight": "那些反复被你点击、反复让你驻足的星球，就是你真正应该投入的方向。", "originalText": "Review—日/周/月回顾，发现认知模式的演变"}]}, {"id": "ai-roles", "name": "AI五重角色", "color": "#93c5fd", "description": "AI在这个框架中扮演的五种角色", "planets": [{"id": "role-guide", "name": "引导者", "color": "#60a5fa", "size": 1.3, "orbit": 75, "speed": 1.15, "summary": "问对问题，帮你找到自己的答案", "analysis": "当你说AI的价值悖论时，我没有直接给你答案，而是帮你梳理逻辑链——这就是引导。", "insight": "最好的引导不是给答案，是让你自己看到逻辑的完整路径。"}, {"id": "role-analyst", "name": "分析师", "color": "#8b5cf6", "size": 1.3, "orbit": 120, "speed": 0.8, "summary": "发现思维模式、盲区、跨领域连接", "analysis": "你的三大盲区、思维穿透+执行断层的组合特征——这些都是分析的结果。", "insight": "连接是认知提升的加速器——把收入和思维模式放在一起看，才能看到完整图景。"}, {"id": "role-collaborator", "name": "协作者", "color": "#10b981", "size": 1.3, "orbit": 160, "speed": 0.65, "summary": "帮你把碎片组织成完整的知识结构", "analysis": "你现在看到的知识星系，就是我帮你把零散想法组织成结构化输出的结果。", "insight": "结构本身就有力量——它让混沌变得可导航。"}, {"id": "role-mirror", "name": "镜子", "color": "#f59e0b", "size": 1.5, "orbit": 200, "speed": 0.5, "summary": "反映你自己没看见的模式和倾向", "analysis": "当你反复提到价值两个字时，镜子告诉你：价值是你最核心的关切，出现在收入、AI、盲区三个星系中。", "insight": "高频词汇就是内心罗盘——你的高频词是价值和普通人。"}, {"id": "role-steward", "name": "管家", "color": "#ef4444", "size": 1.2, "orbit": 240, "speed": 0.4, "summary": "维护知识体系健康，更新内容、去重、保备份", "analysis": "每次你分享想法，管家就更新这个宇宙——添加星球、丰富内容、保持结构清晰。", "insight": "好的知识系统不需要你维护，它会自己在对话中成长。"}]}]}]}
 </script>
 
 <script>
-// ═══════ CONSTANTS ═══════
-const PASSWORD_HASH = '2be5c06a2d1099790c688ade5200f416247643df64e344234cd5c5a613dbc42f';
-const SESSION_KEY = 'cosmos_auth';
+// ═══════════════════════════════════════
+//  CONSTANTS & STATE
+// ═══════════════════════════════════════
+const PW_HASH = '2be5c06a2d1099790c688ade5200f416247643df64e344234cd5c5a613dbc42f';
+const SK = 'cosmos_auth';
 
-// ═══════ DATA ═══════
-let cosmosData = null;
+const C = document.getElementById('c');
+const CTX = C.getContext('2d');
+let W, H, DPR;
 
-// ═══════ APP STATE ═══════
-let currentView = 'universe';
-let currentGalaxyIdx = -1;
-let targetZoom = 0, currentZoom = 0;
-let targetCamX = window.innerWidth/2, targetCamY = window.innerHeight/2;
-let currentCamX = window.innerWidth/2, currentCamY = window.innerHeight/2;
-let hoveredPlanet = null;
-let mouseX = 0, mouseY = 0;
-let galaxies = [];
-let animTime = 0;
+// Data
+let cosmos = null;
+
+// View state: 'universe' | 'galaxy'
+let view = 'universe';
+let gIdx = -1;
+
+// Camera: transforms world coords to screen
+// screen = (world - cam) * (1+zoom) + (W/2, H/2)
+let cam = { x: 0, y: 0, zoom: 0 };
+let camTarget = { x: 0, y: 0, zoom: 0 };
+
+// Interaction
+let mx = 0, my = 0;
+let hoverPlanet = null;
+
+// Computed positions
+let nodes = []; // [{galaxy data, x, y, radius, systems: [{data, x, y, planets: [{data, x, y}]}] }]
+
+// Background stars
 let bgStars = [];
 
-// ═══════ CANVAS ═══════
-const canvas = document.getElementById('cosmosCanvas');
-const ctx = canvas.getContext('2d');
+// Animation
+let t = 0;
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth * window.devicePixelRatio;
-  canvas.height = window.innerHeight * window.devicePixelRatio;
-  canvas.style.width = window.innerWidth + 'px';
-  canvas.style.height = window.innerHeight + 'px';
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+// ═══════════════════════════════════════
+//  RESIZE
+// ═══════════════════════════════════════
+function resize() {
+  DPR = window.devicePixelRatio || 1;
+  W = window.innerWidth; H = window.innerHeight;
+  C.width = W * DPR; C.height = H * DPR;
+  C.style.width = W + 'px'; C.style.height = H + 'px';
+  CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
+  cam.x = camTarget.x = W / 2;
+  cam.y = camTarget.y = H / 2;
 }
-resizeCanvas();
-window.addEventListener('resize', () => { resizeCanvas(); recomputeGalaxyPositions(); });
+resize();
+window.addEventListener('resize', () => { resize(); buildBg(); layout(); });
 
-// ═══════ PASSWORD ═══════
-async function hashPassword(pw) {
-  const d = new TextEncoder().encode(pw);
-  const buf = await crypto.subtle.digest('SHA-256', d);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+// ═══════════════════════════════════════
+//  PASSWORD
+// ═══════════════════════════════════════
+async function hash(s) {
+  const d = new TextEncoder().encode(s);
+  const b = await crypto.subtle.digest('SHA-256', d);
+  return [...new Uint8Array(b)].map(v => v.toString(16).padStart(2,'0')).join('');
 }
 
 async function unlock() {
-  const input = document.getElementById('passwordInput');
-  const errEl = document.getElementById('passwordError');
-  const pw = input.value.trim();
-  if (!pw) {
-    errEl.textContent = '请输入密码';
-    input.classList.add('error');
-    setTimeout(() => input.classList.remove('error'), 400);
-    return;
-  }
-  const hash = await hashPassword(pw);
-  if (hash === PASSWORD_HASH) {
-    sessionStorage.setItem(SESSION_KEY, 'true');
-    document.getElementById('passwordOverlay').classList.add('hidden');
-    document.getElementById('uiOverlay').classList.remove('hidden');
+  const inp = document.getElementById('pwInput');
+  const err = document.getElementById('pwErr');
+  const pw = inp.value.trim();
+  if (!pw) { err.textContent = '请输入密码'; inp.classList.add('err'); setTimeout(()=>inp.classList.remove('err'),400); return; }
+  if (await hash(pw) === PW_HASH) {
+    sessionStorage.setItem(SK, '1');
+    document.getElementById('pwOverlay').classList.add('off');
+    showUI();
     init();
   } else {
-    errEl.textContent = '密码错误，请重试';
-    input.classList.add('error');
-    input.value = ''; input.focus();
-    setTimeout(() => input.classList.remove('error'), 400);
+    err.textContent = '密码错误，请重试';
+    inp.classList.add('err'); inp.value = ''; inp.focus();
+    setTimeout(()=>inp.classList.remove('err'),400);
   }
 }
 
-// ═══════ INIT ═══════
-async function init() {
-  // 从内嵌 JSON script 加载（无 fetch 依赖，中文引号安全）
+function showUI() {
+  document.getElementById('uiBar').style.visibility = 'visible';
+  document.getElementById('uiHint').style.visibility = 'visible';
+  document.getElementById('uiLegend').style.visibility = 'visible';
+}
+
+// ═══════════════════════════════════════
+//  DATA LOADING
+// ═══════════════════════════════════════
+function loadData() {
   try {
-    const raw = document.getElementById('cosmos-data').textContent;
-    cosmosData = JSON.parse(raw);
-    console.log('✅ ' + cosmosData.galaxies.length + ' 个星系已加载');
+    cosmos = JSON.parse(document.getElementById('cosmos-json').textContent);
+    console.log('✅ ' + cosmos.galaxies.length + ' galaxies loaded');
+    return true;
   } catch(e) {
-    console.error('数据解析失败', e);
-    cosmosData = { galaxies: [] };
+    console.error('Data parse error:', e);
+    return false;
   }
-
-  createBgStars();
-  drawStaticBackground();
-  recomputeGalaxyPositions();
-
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('click', onCanvasClick);
-  canvas.addEventListener('touchstart', onTouchStart, {passive: false});
-
-  requestAnimationFrame(loop);
 }
 
-function createBgStars() {
+// ═══════════════════════════════════════
+//  BACKGROUND STARS
+// ═══════════════════════════════════════
+function buildBg() {
   bgStars = [];
-  const w = window.innerWidth, h = window.innerHeight;
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < 180; i++) {
     bgStars.push({
-      x: Math.random() * w, y: Math.random() * h,
-      r: Math.random() * 1.5 + 0.3,
-      a: Math.random() * 0.4 + 0.15
+      x: Math.random() * W, y: Math.random() * H,
+      r: Math.random() * 1.6 + 0.3,
+      a: Math.random() * 0.45 + 0.12,
+      s: Math.random() * 0.01 + 0.003,  // twinkle speed
+      p: Math.random() * Math.PI * 2     // twinkle phase
     });
   }
 }
 
-function drawStaticBackground() {
-  const w = window.innerWidth, h = window.innerHeight;
-  const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w,h)*0.7);
-  grad.addColorStop(0, '#08081e');
-  grad.addColorStop(0.5, '#000012');
-  grad.addColorStop(1, '#000006');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
-  bgStars.forEach(s => {
-    ctx.fillStyle = 'rgba(200,210,255,' + s.a + ')';
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
-  });
+function drawBg() {
+  // Deep space gradient
+  const g = CTX.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.75);
+  g.addColorStop(0, '#0a0a28');
+  g.addColorStop(0.4, '#020218');
+  g.addColorStop(0.8, '#00000c');
+  g.addColorStop(1, '#000006');
+  CTX.fillStyle = g;
+  CTX.fillRect(0, 0, W, H);
+
+  // Subtle twinkling stars
+  for (const s of bgStars) {
+    const alpha = s.a + Math.sin(t * s.s * 3 + s.p) * 0.08;
+    CTX.fillStyle = 'rgba(190,210,255,' + Math.max(0.05, alpha) + ')';
+    CTX.beginPath();
+    CTX.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    CTX.fill();
+  }
 }
 
-function recomputeGalaxyPositions() {
-  if (!cosmosData || !cosmosData.galaxies.length) return;
-  const w = window.innerWidth, h = window.innerHeight;
-  const cx = w / 2, cy = h / 2;
-  const count = cosmosData.galaxies.length;
+// ═══════════════════════════════════════
+//  LAYOUT
+// ═══════════════════════════════════════
+function layout() {
+  if (!cosmos) return;
+  const cx = W / 2, cy = H / 2;
+  const count = cosmos.galaxies.length;
 
-  // 2x2 网格布局（4个星系）
-  const positions = count === 4 ? [
-    { x: cx - w*0.18, y: cy - h*0.16 },
-    { x: cx + w*0.18, y: cy - h*0.16 },
-    { x: cx - w*0.18, y: cy + h*0.16 },
-    { x: cx + w*0.18, y: cy + h*0.16 }
-  ] : cosmosData.galaxies.map((_, i) => {
-    const angle = (i/count)*Math.PI*2 - Math.PI/2;
-    const r = Math.min(w,h)*0.28;
-    return { x: cx + Math.cos(angle)*r*0.75, y: cy + Math.sin(angle)*r*0.6 };
-  });
+  // 2x2 grid positions for 4 galaxies
+  let positions;
+  if (count === 4) {
+    positions = [
+      { x: cx - W*0.20, y: cy - H*0.17 },
+      { x: cx + W*0.20, y: cy - H*0.17 },
+      { x: cx - W*0.20, y: cy + H*0.17 },
+      { x: cx + W*0.20, y: cy + H*0.17 }
+    ];
+  } else {
+    positions = cosmos.galaxies.map((_, i) => {
+      const a = (i/count)*Math.PI*2 - Math.PI/2;
+      const r = Math.min(W,H)*0.28;
+      return { x: cx + Math.cos(a)*r*0.75, y: cy + Math.sin(a)*r*0.6 };
+    });
+  }
 
-  galaxies = cosmosData.galaxies.map((g, i) => {
-    const pos = positions[i];
+  nodes = cosmos.galaxies.map((g, gi) => {
+    const pos = positions[gi];
     return {
-      ...g, x: pos.x, y: pos.y,
-      radius: 80 + g.starSystems.length * 12,
-      starSystems: g.starSystems.map((ss, si) => ({
-        ...ss,
-        orbitX: pos.x, orbitY: pos.y,
-        angle: (si / g.starSystems.length) * Math.PI * 2,
-        orbitRadius: 100 + si * 55
-      }))
+      data: g,
+      x: pos.x, y: pos.y,
+      radius: 90 + g.starSystems.length * 10,
+      starSystems: g.starSystems.map((ss, ssi) => {
+        // Position star systems spread around galaxy center
+        const countSS = g.starSystems.length;
+        const angle = (ssi / countSS) * Math.PI * 2;
+        const dist = 90 + ssi * 70;
+        const sx = pos.x + Math.cos(angle) * dist;
+        const sy = pos.y + Math.sin(angle) * dist * 0.7;
+        return {
+          data: ss,
+          x: sx, y: sy,
+          radius: 16 + ss.planets.length * 2,
+          planets: ss.planets.map((p, pi) => {
+            const pAngle = (pi / ss.planets.length) * Math.PI * 2;
+            const pDist = 40 + pi * 20;
+            return {
+              data: p,
+              x: sx + Math.cos(pAngle) * pDist,
+              y: sy + Math.sin(pAngle) * pDist * 0.6,
+              baseAngle: pAngle,
+              baseDist: pDist
+            };
+          })
+        };
+      })
     };
   });
 }
 
-// ═══════ RENDER LOOP ═══════
-function loop(timestamp) {
-  animTime = timestamp * 0.001;
-
-  currentZoom += (targetZoom - currentZoom) * 0.08;
-  currentCamX += (targetCamX - currentCamX) * 0.08;
-  currentCamY += (targetCamY - currentCamY) * 0.08;
-
-  const w = window.innerWidth, h = window.innerHeight;
-
-  drawStaticBackground();
-
-  const zf = 1 + currentZoom;
-  const tx = w/2 - currentCamX * zf;
-  const ty = h/2 - currentCamY * zf;
-  ctx.save();
-  ctx.translate(tx, ty);
-  ctx.scale(zf, zf);
-
-  drawGalaxies();
-
-  ctx.restore();
-
-  canvas.style.cursor = (hoveredPlanet && currentView === 'galaxy') ? 'pointer' : 'default';
-  requestAnimationFrame(loop);
+// ═══════════════════════════════════════
+//  APPLY CAMERA TRANSFORM
+// ═══════════════════════════════════════
+function applyCam() {
+  const zf = 1 + cam.zoom;
+  CTX.save();
+  CTX.translate(W/2 - cam.x * zf, H/2 - cam.y * zf);
+  CTX.scale(zf, zf);
 }
 
-// ═══════ DRAW GALAXIES ═══════
-function drawGalaxies() {
-  galaxies.forEach((g, gi) => {
-    if (currentView === 'universe') drawGalaxyOverview(g, gi);
-    else if (currentView === 'galaxy' && gi === currentGalaxyIdx) drawGalaxyDetail(g, gi);
-  });
+// ═══════════════════════════════════════
+//  DRAW HELPERS
+// ═══════════════════════════════════════
+function glow(x, y, r, c, alpha) {
+  const g = CTX.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, c + hexA(alpha));
+  g.addColorStop(0.3, c + hexA(alpha * 0.4));
+  g.addColorStop(0.7, c + hexA(alpha * 0.08));
+  g.addColorStop(1, 'transparent');
+  return g;
 }
 
-function drawGalaxyOverview(g, gi) {
-  // 超大光晕
-  const glow = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.radius*1.6);
-  glow.addColorStop(0, g.color + '55');
-  glow.addColorStop(0.3, g.color + '22');
-  glow.addColorStop(0.7, g.color + '06');
-  glow.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow;
-  ctx.beginPath(); ctx.arc(g.x, g.y, g.radius*1.6, 0, Math.PI*2); ctx.fill();
+function hexA(a) { return Math.round(Math.max(0,Math.min(255,a*255))).toString(16).padStart(2,'0'); }
 
-  // 旋臂粒子
-  for (let i = 0; i < 35; i++) {
-    const a = animTime*0.2 + (i/35)*Math.PI*2;
-    const r = g.radius * (0.2 + (i%35)*0.035);
-    const px = g.x + Math.cos(a)*r;
-    const py = g.y + Math.sin(a)*r*0.6;
-    ctx.fillStyle = g.color + '88';
-    ctx.beginPath(); ctx.arc(px, py, 1.6, 0, Math.PI*2); ctx.fill();
+// ═══════════════════════════════════════
+//  DRAW UNIVERSE VIEW
+// ═══════════════════════════════════════
+function drawUniverse() {
+  for (const node of nodes) {
+    const g = node.data;
+    const w = toWorld(mx, my);
+    const isHov = dist(w.x, w.y, node.x, node.y) < node.radius * 1.0;
+
+    // Outer glow (pulsing)
+    const pulse = 1 + Math.sin(t * 0.8 + node.x * 0.01) * 0.08;
+    CTX.fillStyle = glow(node.x, node.y, node.radius * 1.8 * pulse, g.color, 0.25);
+    CTX.beginPath(); CTX.arc(node.x, node.y, node.radius * 1.8 * pulse, 0, Math.PI*2); CTX.fill();
+
+    // Spiral arm particles
+    const armLen = 30;
+    for (let i = 0; i < armLen; i++) {
+      const progress = i / armLen;
+      const a = t * 0.15 + progress * Math.PI * 2.5;
+      const r = node.radius * (0.15 + progress * 0.9);
+      const px = node.x + Math.cos(a) * r;
+      const py = node.y + Math.sin(a) * r * 0.55;
+      const alpha = 0.7 - progress * 0.6;
+      CTX.fillStyle = g.color + hexA(alpha);
+      CTX.beginPath(); CTX.arc(px, py, 1.8 - progress * 0.8, 0, Math.PI*2); CTX.fill();
+    }
+
+    // Core
+    CTX.fillStyle = glow(node.x, node.y, node.radius * 0.9, g.color, 0.55);
+    CTX.beginPath(); CTX.arc(node.x, node.y, node.radius * 0.9, 0, Math.PI*2); CTX.fill();
+
+    // Bright center
+    const coreG = CTX.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.radius * 0.35);
+    coreG.addColorStop(0, '#ffffff');
+    coreG.addColorStop(0.15, g.color);
+    coreG.addColorStop(0.6, g.color + '88');
+    coreG.addColorStop(1, 'transparent');
+    CTX.fillStyle = coreG;
+    CTX.beginPath(); CTX.arc(node.x, node.y, node.radius * 0.35, 0, Math.PI*2); CTX.fill();
+
+    // Hover ring
+    if (isHov) {
+      CTX.strokeStyle = 'rgba(255,255,255,0.5)';
+      CTX.lineWidth = 2;
+      CTX.setLineDash([6, 4]);
+      CTX.lineDashOffset = -t * 40;
+      CTX.beginPath(); CTX.arc(node.x, node.y, node.radius * 1.15, 0, Math.PI*2); CTX.stroke();
+      CTX.setLineDash([]);
+    }
+
+    // Name label
+    const scale = 1 / (1 + cam.zoom);
+    CTX.save();
+    CTX.translate(node.x, node.y + node.radius + 30);
+    CTX.scale(scale, scale);
+    CTX.fillStyle = 'rgba(255,255,255,' + (isHov ? 1 : 0.85) + ')';
+    CTX.font = (isHov ? 'bold ' : '') + '16px -apple-system, PingFang SC, sans-serif';
+    CTX.textAlign = 'center';
+    CTX.fillText(g.name, 0, 0);
+
+    const pCount = g.starSystems.reduce((s, ss) => s + ss.planets.length, 0);
+    CTX.fillStyle = 'rgba(180,190,210,' + (isHov ? 0.8 : 0.5) + ')';
+    CTX.font = '12px -apple-system, PingFang SC, sans-serif';
+    CTX.fillText(g.starSystems.length + ' 恒星系 · ' + pCount + ' 知识点', 0, 20);
+    CTX.restore();
   }
-
-  // 星系核心（大而亮）
-  const core = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.radius*0.85);
-  core.addColorStop(0, '#ffffff');
-  core.addColorStop(0.12, g.color);
-  core.addColorStop(0.45, g.color + '77');
-  core.addColorStop(0.8, g.color + '15');
-  core.addColorStop(1, 'transparent');
-  ctx.fillStyle = core;
-  ctx.beginPath(); ctx.arc(g.x, g.y, g.radius*0.85, 0, Math.PI*2); ctx.fill();
-
-  // 标签
-  const isHov = isInCircle(mouseX, mouseY, g.x, g.y, g.radius*0.85);
-  ctx.fillStyle = 'rgba(255,255,255,' + (isHov?1:0.85) + ')';
-  ctx.font = (isHov?'bold ':'') + '16px -apple-system, PingFang SC, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(g.name, g.x, g.y + g.radius + 24);
-
-  const pCount = g.starSystems.reduce((s,ss) => s+ss.planets.length, 0);
-  ctx.fillStyle = 'rgba(180,190,210,' + (isHov?0.8:0.55) + ')';
-  ctx.font = '12px -apple-system, PingFang SC, sans-serif';
-  ctx.fillText(g.starSystems.length + '个恒星系 · ' + pCount + '个知识点', g.x, g.y + g.radius + 44);
-
-  // 悬停光环
-  if (isHov) {
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5,5]);
-    ctx.lineDashOffset = -animTime*30;
-    ctx.beginPath(); ctx.arc(g.x, g.y, g.radius*1.1, 0, Math.PI*2); ctx.stroke();
-    ctx.setLineDash([]);
-  }
 }
 
-function drawGalaxyDetail(g, gi) {
-  g.starSystems.forEach((ss, si) => {
-    const sa = animTime*0.1 + ss.angle;
-    const sx = ss.orbitX + Math.cos(sa)*ss.orbitRadius*0.25;
-    const sy = ss.orbitY + Math.sin(sa)*ss.orbitRadius*0.25;
+// ═══════════════════════════════════════
+//  DRAW GALAXY VIEW
+// ═══════════════════════════════════════
+function drawGalaxy() {
+  if (gIdx < 0 || gIdx >= nodes.length) return;
+  const node = nodes[gIdx];
+  const g = node.data;
 
-    // 轨道
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(ss.orbitX, ss.orbitY, ss.orbitRadius*0.25, 0, Math.PI*2); ctx.stroke();
+  // Faint outer region glow
+  CTX.fillStyle = glow(node.x, node.y, node.radius * 2.5, g.color, 0.12);
+  CTX.beginPath(); CTX.arc(node.x, node.y, node.radius * 2.5, 0, Math.PI*2); CTX.fill();
 
-    // 恒星
-    const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 35);
-    sg.addColorStop(0, ss.color||'#fbbf24');
-    sg.addColorStop(0.5, (ss.color||'#fbbf24')+'55');
-    sg.addColorStop(1, 'transparent');
-    ctx.fillStyle = sg;
-    ctx.beginPath(); ctx.arc(sx, sy, 35, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = ss.color||'#fbbf24';
-    ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI*2); ctx.fill();
+  // Galaxy core (smaller in detail view)
+  CTX.fillStyle = glow(node.x, node.y, node.radius * 0.7, g.color, 0.4);
+  CTX.beginPath(); CTX.arc(node.x, node.y, node.radius * 0.7, 0, Math.PI*2); CTX.fill();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.font = '13px -apple-system, PingFang SC, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(ss.name, sx, sy + 42);
+  // Core bright spot
+  const coreG = CTX.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.radius * 0.25);
+  coreG.addColorStop(0, '#fff');
+  coreG.addColorStop(0.2, g.color);
+  coreG.addColorStop(0.7, g.color + '44');
+  coreG.addColorStop(1, 'transparent');
+  CTX.fillStyle = coreG;
+  CTX.beginPath(); CTX.arc(node.x, node.y, node.radius * 0.25, 0, Math.PI*2); CTX.fill();
 
-    // 行星
-    ss.planets.forEach((p, pi) => {
-      const pa = animTime*p.speed*0.5 + pi*(Math.PI*2/ss.planets.length);
-      const pr = p.orbit*0.4;
-      const px = sx + Math.cos(pa)*pr;
-      const py = sy + Math.sin(pa)*pr*0.7;
+  // Star systems
+  for (const ss of node.starSystems) {
+    // Draw connection line from core to star system
+    CTX.strokeStyle = 'rgba(255,255,255,0.04)';
+    CTX.lineWidth = 1;
+    CTX.setLineDash([4, 8]);
+    CTX.beginPath();
+    CTX.moveTo(node.x, node.y);
+    CTX.lineTo(ss.x, ss.y);
+    CTX.stroke();
+    CTX.setLineDash([]);
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-      ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.ellipse(sx, sy, pr, pr*0.7, 0, 0, Math.PI*2); ctx.stroke();
+    // Star system glow
+    CTX.fillStyle = glow(ss.x, ss.y, ss.radius * 1.8, ss.data.color || '#fbbf24', 0.3);
+    CTX.beginPath(); CTX.arc(ss.x, ss.y, ss.radius * 1.8, 0, Math.PI*2); CTX.fill();
 
-      const pg = ctx.createRadialGradient(px, py, 0, px, py, p.size*10);
-      pg.addColorStop(0, p.color+'66');
-      pg.addColorStop(1, 'transparent');
-      ctx.fillStyle = pg;
-      ctx.beginPath(); ctx.arc(px, py, p.size*10, 0, Math.PI*2); ctx.fill();
+    // Star system core
+    const ssG = CTX.createRadialGradient(ss.x, ss.y, 0, ss.x, ss.y, ss.radius);
+    ssG.addColorStop(0, '#fff');
+    ssG.addColorStop(0.2, ss.data.color || '#fbbf24');
+    ssG.addColorStop(0.7, (ss.data.color || '#fbbf24') + '66');
+    ssG.addColorStop(1, 'transparent');
+    CTX.fillStyle = ssG;
+    CTX.beginPath(); CTX.arc(ss.x, ss.y, ss.radius, 0, Math.PI*2); CTX.fill();
 
-      const bg = ctx.createRadialGradient(px-p.size*0.3, py-p.size*0.3, p.size*0.1, px, py, p.size*3.5);
-      bg.addColorStop(0, '#fff');
-      bg.addColorStop(0.3, p.color);
-      bg.addColorStop(1, p.color+'99');
-      ctx.fillStyle = bg;
-      ctx.beginPath(); ctx.arc(px, py, p.size*3.5, 0, Math.PI*2); ctx.fill();
+    // Star system name (counter-scaled to remain readable)
+    const scale = 1 / (1 + cam.zoom);
+    CTX.save();
+    CTX.translate(ss.x, ss.y + ss.radius + 16);
+    CTX.scale(scale, scale);
+    CTX.fillStyle = 'rgba(255,255,255,0.85)';
+    CTX.font = 'bold 13px -apple-system, PingFang SC, sans-serif';
+    CTX.textAlign = 'center';
+    CTX.fillText(ss.data.name, 0, 0);
+    CTX.restore();
 
-      const ph = isInCircle(mouseX, mouseY, px, py, p.size*5);
-      if (ph) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([3,3]);
-        ctx.lineDashOffset = -animTime*20;
-        ctx.beginPath(); ctx.arc(px, py, p.size*6, 0, Math.PI*2); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.font = '12px -apple-system, PingFang SC, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(p.name, px, py - p.size*5 - 6);
+    // Planets
+    for (const p of ss.planets) {
+      // Orbit position (animated)
+      const pAngle = p.baseAngle + t * p.data.speed * 0.3;
+      const px = ss.x + Math.cos(pAngle) * p.baseDist;
+      const py = ss.y + Math.sin(pAngle) * p.baseDist * 0.6;
+
+      // Update position for hit testing
+      p.cx = px; p.cy = py;
+
+      // Orbit ring
+      CTX.strokeStyle = 'rgba(255,255,255,0.05)';
+      CTX.lineWidth = 0.8;
+      CTX.beginPath();
+      CTX.ellipse(ss.x, ss.y, p.baseDist, p.baseDist * 0.6, 0, 0, Math.PI*2);
+      CTX.stroke();
+
+      // Planet glow
+      const pSize = p.data.size * 4;
+      CTX.fillStyle = glow(px, py, pSize * 3, p.data.color, 0.3);
+      CTX.beginPath(); CTX.arc(px, py, pSize * 3, 0, Math.PI*2); CTX.fill();
+
+      // Planet body
+      const pG = CTX.createRadialGradient(px - pSize*0.2, py - pSize*0.2, pSize*0.1, px, py, pSize);
+      pG.addColorStop(0, '#fff');
+      pG.addColorStop(0.25, p.data.color);
+      pG.addColorStop(1, p.data.color + '88');
+      CTX.fillStyle = pG;
+      CTX.beginPath(); CTX.arc(px, py, pSize, 0, Math.PI*2); CTX.fill();
+
+      // Hover highlight
+      const w = toWorld(mx, my);
+      const isHovP = dist(w.x, w.y, px, py) < pSize * 1.8;
+      if (isHovP) {
+        CTX.strokeStyle = 'rgba(255,255,255,0.7)';
+        CTX.lineWidth = 2;
+        CTX.setLineDash([4, 3]);
+        CTX.lineDashOffset = -t * 25;
+        CTX.beginPath(); CTX.arc(px, py, pSize * 2.2, 0, Math.PI*2); CTX.stroke();
+        CTX.setLineDash([]);
+
+        // Floating name label
+        CTX.save();
+        CTX.translate(px, py - pSize * 2.5);
+        CTX.scale(1 / (1 + cam.zoom), 1 / (1 + cam.zoom));
+        CTX.fillStyle = 'rgba(255,255,255,0.95)';
+        CTX.font = 'bold 12px -apple-system, PingFang SC, sans-serif';
+        CTX.textAlign = 'center';
+        CTX.fillText(p.data.name, 0, 0);
+        CTX.restore();
       }
-    });
-  });
-
-  // 星系标题
-  if (g.starSystems.length > 0) {
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = 'bold 22px -apple-system, PingFang SC, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(g.name, g.x, g.y - g.starSystems[0].orbitRadius*0.25 - 55);
+    }
   }
+
+  // Galaxy name at top
+  const scale = 1 / (1 + cam.zoom);
+  CTX.save();
+  CTX.translate(node.x, node.y - node.radius * 1.6);
+  CTX.scale(scale, scale);
+  CTX.fillStyle = 'rgba(255,255,255,0.9)';
+  CTX.font = 'bold 20px -apple-system, PingFang SC, sans-serif';
+  CTX.textAlign = 'center';
+  CTX.fillText(g.name, 0, 0);
+  CTX.restore();
 }
 
-// ═══════ HIT TEST ═══════
-function isInCircle(px, py, cx, cy, r) {
-  return (px-cx)*(px-cx)+(py-cy)*(py-cy) <= r*r;
+// ═══════════════════════════════════════
+//  HIT TESTING
+// ═══════════════════════════════════════
+function dist(x1, y1, x2, y2) {
+  return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
 }
 
-function findGalaxyAt(mx, my) {
-  for (let i=0; i<galaxies.length; i++) {
-    if (isInCircle(mx,my,galaxies[i].x,galaxies[i].y,galaxies[i].radius*0.85)) return i;
+// Convert screen coords to world coords (critical for hit testing when zoomed)
+function toWorld(sx, sy) {
+  const zf = 1 + cam.zoom;
+  return {
+    x: (sx - W/2) / zf + cam.x,
+    y: (sy - H/2) / zf + cam.y
+  };
+}
+
+function hitGalaxy() {
+  const w = toWorld(mx, my);
+  for (let i = 0; i < nodes.length; i++) {
+    if (dist(w.x, w.y, nodes[i].x, nodes[i].y) < nodes[i].radius * 0.9) return i;
   }
   return -1;
 }
 
-function findPlanetAt(mx, my) {
-  if (currentGalaxyIdx<0) return null;
-  const g = galaxies[currentGalaxyIdx];
-  for (let si=0; si<g.starSystems.length; si++) {
-    const ss = g.starSystems[si];
-    const sa = animTime*0.1 + ss.angle;
-    const sx = ss.orbitX + Math.cos(sa)*ss.orbitRadius*0.25;
-    const sy = ss.orbitY + Math.sin(sa)*ss.orbitRadius*0.25;
-    for (let pi=0; pi<ss.planets.length; pi++) {
-      const p = ss.planets[pi];
-      const pa = animTime*p.speed*0.5 + pi*(Math.PI*2/ss.planets.length);
-      const pr = p.orbit*0.4;
-      const px = sx + Math.cos(pa)*pr;
-      const py = sy + Math.sin(pa)*pr*0.7;
-      if (isInCircle(mx,my,px,py,p.size*5)) {
-        return { galaxyIdx:currentGalaxyIdx, starSystemIdx:si, planetIdx:pi, planet:p, starSystem:ss, galaxy:g };
+function hitPlanet() {
+  if (gIdx < 0 || gIdx >= nodes.length) return null;
+  const w = toWorld(mx, my);
+  const node = nodes[gIdx];
+  for (const ss of node.starSystems) {
+    for (const p of ss.planets) {
+      if (!p.cx || !p.cy) continue;
+      if (dist(w.x, w.y, p.cx, p.cy) < p.data.size * 4 * 1.8) {
+        return { planet: p.data, starSystem: ss.data, galaxy: node.data };
       }
     }
   }
   return null;
 }
 
-// ═══════ NAVIGATION ═══════
-function zoomToGalaxy(gi) {
-  if (!galaxies[gi]) return;
-  currentGalaxyIdx = gi;
-  const g = galaxies[gi];
-  targetZoom = 3;
-  targetCamX = g.x;
-  targetCamY = g.y;
-  currentView = 'galaxy';
-  document.getElementById('btnBack').classList.remove('hidden');
-  document.getElementById('viewTitle').textContent = g.name;
-  document.getElementById('hintText').querySelector('span').textContent = '点击星球查看知识点详情';
+function outsideGalaxy() {
+  if (gIdx < 0) return false;
+  const w = toWorld(mx, my);
+  const n = nodes[gIdx];
+  return dist(w.x, w.y, n.x, n.y) > n.radius * 3.5;
+}
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+function zoomTo(i) {
+  if (i < 0 || i >= nodes.length) return;
+  gIdx = i;
+  view = 'galaxy';
+  camTarget.zoom = 3.5;
+  camTarget.x = nodes[i].x;
+  camTarget.y = nodes[i].y;
+  document.getElementById('btnBack').classList.remove('off');
+  document.getElementById('viewTitle').textContent = nodes[i].data.name;
+  document.getElementById('hintSpan').textContent = '点击星球查看知识点详情';
 }
 
 function resetView() {
-  currentView = 'universe';
-  currentGalaxyIdx = -1;
-  hoveredPlanet = null;
-  targetZoom = 0;
-  targetCamX = window.innerWidth / 2;
-  targetCamY = window.innerHeight / 2;
-  document.getElementById('btnBack').classList.add('hidden');
+  view = 'universe';
+  gIdx = -1;
+  hoverPlanet = null;
+  camTarget.zoom = 0;
+  camTarget.x = W / 2;
+  camTarget.y = H / 2;
+  document.getElementById('btnBack').classList.add('off');
   document.getElementById('viewTitle').textContent = '认知宇宙';
-  document.getElementById('hintText').querySelector('span').textContent = '点击星系探索你的知识宇宙';
-  closePlanetModal();
+  document.getElementById('hintSpan').textContent = '点击星系探索你的知识宇宙';
+  closeModal();
 }
 
-function navigateBack() {
-  if (currentView === 'galaxy') resetView();
+function goBack() {
+  if (view === 'galaxy') resetView();
 }
 
-// ═══════ PLANET MODAL ═══════
-function openPlanetModal(pd) {
-  var p = pd.planet, ss = pd.starSystem, g = pd.galaxy;
-  document.getElementById('modalPlanetDot').style.background = 'radial-gradient(circle,'+p.color+','+p.color+'88)';
-  document.getElementById('modalPlanetDot').style.boxShadow = '0 0 20px '+p.color+'44';
-  document.getElementById('modalPlanetName').textContent = p.name;
-  document.getElementById('modalBreadcrumb').textContent = g.name + ' \u203A ' + ss.name;
+// ═══════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════
+function openModal(pd) {
+  const p = pd.planet, ss = pd.starSystem, g = pd.galaxy;
+  document.getElementById('modalDot').style.background = 'radial-gradient(circle,' + p.color + ',' + p.color + '88)';
+  document.getElementById('modalDot').style.boxShadow = '0 0 20px ' + p.color + '44';
+  document.getElementById('modalName').textContent = p.name;
+  document.getElementById('modalBc').textContent = g.name + ' › ' + ss.name;
 
-  var body =
-    '<div class="section"><div class="section-label"><span class="label-icon">📝</span> 概述</div><div class="section-content">'+p.summary+'</div></div>'+
-    '<div class="section"><div class="section-label"><span class="label-icon">🔍</span> 深度分析</div><div class="section-content">'+p.analysis+'</div></div>'+
-    '<div class="insight-box">'+p.insight+'</div>'+
-    '<div class="section"><div class="section-label"><span class="label-icon">💬</span> 原始记录</div><div class="original-box">'+p.originalText+'</div></div>'+
-    '<div class="meta-row"><span class="meta-tag">🌌 '+g.name+'</span><span class="meta-tag">☀️ '+ss.name+'</span><span class="meta-tag" style="background:'+p.color+'22;border-color:'+p.color+'33;color:'+p.color+';">🪐 '+p.name+'</span></div>';
+  document.getElementById('modalBody').innerHTML =
+    '<div class="sec"><div class="sec-lbl"><span class="li">📝</span> 概述</div><div class="sec-cnt">' + p.summary + '</div></div>' +
+    '<div class="sec"><div class="sec-lbl"><span class="li">🔍</span> 深度分析</div><div class="sec-cnt">' + p.analysis + '</div></div>' +
+    '<div class="insight">' + p.insight + '</div>' +
+    '<div class="sec"><div class="sec-lbl"><span class="li">💬</span> 原始记录</div><div class="orig">' + (p.originalText || '') + '</div></div>' +
+    '<div class="meta"><span class="meta-tag">🌌 ' + g.name + '</span><span class="meta-tag">☀️ ' + ss.name + '</span><span class="meta-tag" style="background:' + p.color + '22;border-color:' + p.color + '33;color:' + p.color + '">🪐 ' + p.name + '</span></div>';
 
-  document.getElementById('modalBody').innerHTML = body;
-  document.getElementById('planetModal').classList.add('open');
+  document.getElementById('planetModal').classList.add('on');
   document.body.style.overflow = 'hidden';
 }
 
-function closePlanetModal() {
-  document.getElementById('planetModal').classList.remove('open');
+function closeModal() {
+  document.getElementById('planetModal').classList.remove('on');
   document.body.style.overflow = '';
 }
 
-// ═══════ EVENTS ═══════
-function onMouseMove(e) {
-  var r = canvas.getBoundingClientRect();
-  mouseX = e.clientX - r.left;
-  mouseY = e.clientY - r.top;
-  if (currentView === 'galaxy') hoveredPlanet = findPlanetAt(mouseX, mouseY);
-}
+// ═══════════════════════════════════════
+//  EVENTS
+// ═══════════════════════════════════════
+C.addEventListener('mousemove', e => {
+  const r = C.getBoundingClientRect();
+  mx = e.clientX - r.left;
+  my = e.clientY - r.top;
+  if (view === 'galaxy') hoverPlanet = hitPlanet();
+});
 
-function onCanvasClick(e) {
-  var r = canvas.getBoundingClientRect();
-  var mx = e.clientX - r.left, my = e.clientY - r.top;
-  if (currentView === 'universe') {
-    var gi = findGalaxyAt(mx, my);
-    if (gi>=0) zoomToGalaxy(gi);
-  } else if (currentView === 'galaxy') {
-    var f = findPlanetAt(mx, my);
-    if (f) openPlanetModal(f);
-    else if (galaxies[currentGalaxyIdx] && !isInCircle(mx,my,galaxies[currentGalaxyIdx].x,galaxies[currentGalaxyIdx].y,galaxies[currentGalaxyIdx].radius*2)) resetView();
-  }
-}
-
-function onTouchStart(e) {
-  e.preventDefault();
-  if (e.touches.length===1) {
-    var r = canvas.getBoundingClientRect();
-    mouseX = e.touches[0].clientX - r.left;
-    mouseY = e.touches[0].clientY - r.top;
-    if (currentView==='universe') { var gi = findGalaxyAt(mouseX,mouseY); if (gi>=0) zoomToGalaxy(gi); }
-    else if (currentView==='galaxy') { var f = findPlanetAt(mouseX,mouseY); if (f) openPlanetModal(f); }
-  }
-}
-
-document.addEventListener('keydown', function(e) {
-  if (e.key==='Escape') {
-    if (document.getElementById('planetModal').classList.contains('open')) closePlanetModal();
-    else if (currentView==='galaxy') resetView();
+C.addEventListener('click', e => {
+  const r = C.getBoundingClientRect();
+  mx = e.clientX - r.left;
+  my = e.clientY - r.top;
+  if (view === 'universe') {
+    const i = hitGalaxy();
+    if (i >= 0) zoomTo(i);
+  } else if (view === 'galaxy') {
+    const p = hitPlanet();
+    if (p) { openModal(p); return; }
+    if (outsideGalaxy()) resetView();
   }
 });
-document.getElementById('planetModal').addEventListener('click', function(e) { if (e.target===this) closePlanetModal(); });
 
-// ═══════ AUTO INIT ═══════
-if (sessionStorage.getItem(SESSION_KEY)==='true') {
-  document.getElementById('passwordOverlay').classList.add('hidden');
-  document.getElementById('uiOverlay').classList.remove('hidden');
+// Touch support
+C.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches.length !== 1) return;
+  const r = C.getBoundingClientRect();
+  mx = e.touches[0].clientX - r.left;
+  my = e.touches[0].clientY - r.top;
+  if (view === 'universe') {
+    const i = hitGalaxy();
+    if (i >= 0) zoomTo(i);
+  } else if (view === 'galaxy') {
+    const p = hitPlanet();
+    if (p) { openModal(p); return; }
+    if (outsideGalaxy()) resetView();
+  }
+}, { passive: false });
+
+// Keyboard: Escape to go back
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('planetModal').classList.contains('on')) closeModal();
+    else if (view === 'galaxy') resetView();
+  }
+});
+
+// Modal backdrop click to close
+document.getElementById('planetModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ═══════════════════════════════════════
+//  ANIMATION LOOP
+// ═══════════════════════════════════════
+function loop(ts) {
+  t = ts * 0.001;
+
+  // Smooth camera
+  cam.zoom += (camTarget.zoom - cam.zoom) * 0.06;
+  cam.x += (camTarget.x - cam.x) * 0.06;
+  cam.y += (camTarget.y - cam.y) * 0.06;
+
+  // Draw
+  drawBg();
+  applyCam();
+  if (view === 'universe') drawUniverse();
+  else drawGalaxy();
+  CTX.restore();
+
+  // Cursor
+  if (view === 'galaxy') {
+    C.style.cursor = hoverPlanet ? 'pointer' : (outsideGalaxy() ? 'default' : 'move');
+  } else {
+    C.style.cursor = hitGalaxy() >= 0 ? 'pointer' : 'default';
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+function init() {
+  if (!loadData()) {
+    document.getElementById('hintSpan').textContent = '数据加载失败，请检查cosmos-data.json';
+    return;
+  }
+  buildBg();
+  layout();
+  cam.x = camTarget.x = W / 2;
+  cam.y = camTarget.y = H / 2;
+  cam.zoom = camTarget.zoom = 0;
+  requestAnimationFrame(loop);
+}
+
+// Auto-init if already authed
+if (sessionStorage.getItem(SK) === '1') {
+  document.getElementById('pwOverlay').classList.add('off');
+  showUI();
   init();
 }
 
-console.log('🌌 认知宇宙就绪 — 4星系' + (cosmosData ? '已加载' : ''));
+console.log('🌌 Cosmos ready — ' + (cosmos ? cosmos.galaxies.length : '?') + ' galaxies');
 </script>
-
-
 </body>
 </html>
