@@ -838,7 +838,8 @@ let cosmosData = null;
 let currentView = 'universe';
 let currentGalaxyIdx = -1;
 let targetZoom = 0, currentZoom = 0;
-let targetCamX = 0, targetCamY = 0, currentCamX = 0, currentCamY = 0;
+let targetCamX = window.innerWidth/2, targetCamY = window.innerHeight/2;
+let currentCamX = window.innerWidth/2, currentCamY = window.innerHeight/2;
 let hoveredPlanet = null;
 let mouseX = 0, mouseY = 0;
 let galaxies = [];
@@ -986,9 +987,8 @@ function loop(timestamp) {
   drawStaticBackground();
 
   const zf = 1 + currentZoom;
-  const sw = w * (zf-1)/2, sh = h * (zf-1)/2;
-  const tx = sw - currentCamX * currentZoom;
-  const ty = sh - currentCamY * currentZoom;
+  const tx = w/2 - currentCamX * zf;
+  const ty = h/2 - currentCamY * zf;
   ctx.save();
   ctx.translate(tx, ty);
   ctx.scale(zf, zf);
@@ -1177,8 +1177,8 @@ function zoomToGalaxy(gi) {
   currentGalaxyIdx = gi;
   const g = galaxies[gi];
   targetZoom = 3;
-  targetCamX = g.x - window.innerWidth/2;
-  targetCamY = g.y - window.innerHeight/2;
+  targetCamX = g.x;
+  targetCamY = g.y;
   currentView = 'galaxy';
   document.getElementById('btnBack').classList.remove('hidden');
   document.getElementById('viewTitle').textContent = g.name;
@@ -1189,7 +1189,9 @@ function resetView() {
   currentView = 'universe';
   currentGalaxyIdx = -1;
   hoveredPlanet = null;
-  targetZoom = 0; targetCamX = 0; targetCamY = 0;
+  targetZoom = 0;
+  targetCamX = window.innerWidth / 2;
+  targetCamY = window.innerHeight / 2;
   document.getElementById('btnBack').classList.add('hidden');
   document.getElementById('viewTitle').textContent = '认知宇宙';
   document.getElementById('hintText').querySelector('span').textContent = '点击星系探索你的知识宇宙';
