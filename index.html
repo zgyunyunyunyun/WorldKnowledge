@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>认知框架 · 个人知识体系</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+/* ========================================
+   CSS Variables & Theme
+   ======================================== */
+:root {
+  --bg-primary: #0f1729;
+  --bg-secondary: #1a2332;
+  --bg-card: #1e2a3a;
+  --bg-input: #15202b;
+  --text-primary: #e8edf2;
+  --text-secondary: #8b9db5;
+  --text-muted: #5a6e85;
+  --border: #2a3a4e;
+  --border-light: #334155;
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --glass-bg: rgba(30,42,58,0.85);
+  --glass-border: rgba(255,255,255,0.06);
+  --sidebar-width: 250px;
+  
+  /* Category Colors */
+  --cat-tech: #3b82f6;
+  --cat-tech-bg: rgba(59,130,246,0.12);
+  --cat-product: #8b5cf6;
+  --cat-product-bg: rgba(139,92,246,0.12);
+  --cat-reading: #10b981;
+  --cat-reading-bg: rgba(16,185,129,0.12);
+  --cat-ideas: #f59e0b;
+  --cat-ideas-bg: rgba(245,158,11,0.12);
+  --cat-methods: #14b8a6;
+  --cat-methods-bg: rgba(20,184,166,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ========================================
+   Password Overlay
+   ======================================== */
+.password-overlay {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #0f1729 0%, #1a1a3e 40%, #0d1b2a 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.5s, visibility 0.5s;
+}
+.password-overlay.hidden {
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.password-card {
+  background: rgba(30,42,58,0.7);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 48px 40px;
+  width: 400px;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+.password-card .logo-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 28px;
+}
+.password-card h1 {
+  font-size: 24px; font-weight: 700;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.password-card .subtitle {
+  font-size: 14px; color: var(--text-muted);
+  margin-bottom: 28px;
+}
+.password-card input {
+  width: 100%; padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 15px;
+  outline: none; transition: var(--transition);
+  text-align: center; letter-spacing: 4px;
+}
+.password-card input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+}
+.password-card input.error {
+  border-color: var(--danger);
+  animation: shake 0.4s ease;
+}
+.password-card button {
+  width: 100%; padding: 14px;
+  margin-top: 16px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  color: white; border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: var(--transition);
+}
+.password-card button:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
+.password-card .error-msg {
+  color: var(--danger); font-size: 13px;
+  margin-top: 10px; min-height: 20px;
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+/* ========================================
+   Main App Layout
+   ======================================== */
+.app-container {
+  display: flex; height: 100vh;
+  opacity: 0; transition: opacity 0.4s;
+}
+.app-container.visible { opacity: 1; }
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 0.3s;
+  z-index: 100;
+}
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-header .brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-header .brand-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.sidebar-header .brand-text {
+  font-size: 16px; font-weight: 700;
+  line-height: 1.2;
+}
+.sidebar-header .brand-sub {
+  font-size: 11px; color: var(--text-muted);
+  font-weight: 400;
+}
+.sidebar-nav {
+  flex: 1; overflow-y: auto;
+  padding: 12px 12px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer; transition: var(--transition);
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 2px;
+  position: relative;
+}
+.nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+.nav-item.active {
+  background: rgba(99,102,241,0.12);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.nav-item .nav-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.08);
+  padding: 2px 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 600;
+}
+.nav-item.active .nav-badge { background: rgba(99,102,241,0.25); }
+.nav-item .cat-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-footer .stats {
+  display: flex; gap: 16px;
+  font-size: 12px; color: var(--text-muted);
+}
+.sidebar-footer .stats span {
+  display: flex; align-items: center; gap: 4px;
+}
+.sidebar-footer .stats strong { color: var(--text-secondary); }
+
+.sidebar-toggle {
+  display: none; position: fixed; top: 16px; left: 16px;
+  z-index: 200; width: 36px; height: 36px;
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text-secondary);
+  cursor: pointer; font-size: 18px;
+  align-items: center; justify-content: center;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; min-width: 0;
+}
+
+/* Top Toolbar */
+.toolbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-primary);
+  flex-shrink: 0;
+}
+.toolbar .search-box {
+  flex: 1; position: relative;
+  max-width: 400px;
+}
+.toolbar .search-box input {
+  width: 100%; padding: 10px 14px 10px 38px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px; outline: none; transition: var(--transition);
+}
+.toolbar .search-box input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.toolbar .search-box .search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); font-size: 15px;
+}
+.toolbar .entry-count {
+  font-size: 13px; color: var(--text-muted);
+  white-space: nowrap;
+}
+.toolbar .btn {
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer; transition: var(--transition);
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.toolbar .btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.toolbar .btn.ai-btn {
+  background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+  border-color: rgba(99,102,241,0.3);
+  color: #a5b4fc;
+}
+.toolbar .btn.ai-btn:hover {
+  background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
+  color: #c7d2fe;
+}
+
+/* Entry List */
+.entry-list-container {
+  flex: 1; overflow-y: auto; padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.entry-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+.entry-list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.entry-list-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.entry-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  cursor: pointer; transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.entry-card::before {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 3px;
+  border-radius: 0 2px 2px 0;
+  transition: var(--transition);
+}
+.entry-card.cat-tech::before { background: var(--cat-tech); }
+.entry-card.cat-product::before { background: var(--cat-product); }
+.entry-card.cat-reading::before { background: var(--cat-reading); }
+.entry-card.cat-ideas::before { background: var(--cat-ideas); }
+.entry-card.cat-methods::before { background: var(--cat-methods); }
+.entry-card:hover {
+  border-color: rgba(255,255,255,0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.entry-card-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 8px;
+}
+.entry-card-title {
+  font-size: 16px; font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+.entry-card-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-muted);
+  flex-shrink: 0;
+}
+.entry-card-preview {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.entry-card-tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 12px;
+}
+.tag {
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--text-muted);
+  text-align: center;
+  gap: 12px;
+  padding: 40px;
+}
+.empty-state .empty-icon {
+  font-size: 48px; opacity: 0.4;
+  margin-bottom: 8px;
+}
+.empty-state h3 {
+  font-size: 18px; font-weight: 600;
+  color: var(--text-secondary);
+}
+.empty-state p {
+  font-size: 14px; max-width: 320px;
+}
+
+/* FAB Button */
+.fab {
+  position: fixed; bottom: 32px; right: 32px;
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border: none; border-radius: 50%;
+  color: white; font-size: 24px;
+  cursor: pointer; z-index: 50;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+}
+.fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(99,102,241,0.6);
+}
+
+/* ========================================
+   Modal
+   ======================================== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500;
+  opacity: 0; visibility: hidden; transition: 0.2s;
+}
+.modal-overlay.open { opacity: 1; visibility: visible; }
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 680px; max-width: 95vw;
+  max-height: 85vh;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(10px);
+  transition: transform 0.2s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h2 { font-size: 18px; font-weight: 700; }
+.modal-header .close-btn {
+  width: 32px; height: 32px;
+  background: none; border: none;
+  color: var(--text-muted); font-size: 20px;
+  cursor: pointer; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.modal-header .close-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+.modal-body {
+  flex: 1; overflow-y: auto; padding: 24px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.modal-body::-webkit-scrollbar { width: 4px; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.modal-body label {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: -10px;
+}
+.modal-body select,
+.modal-body input,
+.modal-body textarea {
+  width: 100%; padding: 12px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px; font-family: inherit;
+  outline: none; transition: var(--transition);
+}
+.modal-body select:focus,
+.modal-body input:focus,
+.modal-body textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+}
+.modal-body textarea {
+  min-height: 200px;
+  resize: vertical;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.modal-body .preview-pane {
+  min-height: 200px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-y: auto;
+}
+.modal-body .preview-pane h1,
+.modal-body .preview-pane h2,
+.modal-body .preview-pane h3 {
+  margin: 16px 0 8px;
+  color: var(--text-primary);
+}
+.modal-body .preview-pane p { margin-bottom: 10px; color: var(--text-secondary); }
+.modal-body .preview-pane code {
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px; border-radius: 4px;
+  font-size: 12px;
+}
+.modal-body .preview-pane pre {
+  background: var(--bg-input);
+  padding: 12px; border-radius: var(--radius-sm);
+  overflow-x: auto; font-size: 12px;
+}
+.modal-body .preview-pane blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 14px; color: var(--text-muted);
+  margin: 10px 0;
+}
+.modal-footer {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+}
+.modal-footer .btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: var(--transition);
+  border: 1px solid var(--border);
+}
+.modal-footer .btn-primary {
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  color: white; border: none;
+}
+.modal-footer .btn-primary:hover { filter: brightness(1.1); }
+.modal-footer .btn-secondary {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-secondary);
+}
+.modal-footer .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+.modal-footer .btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: transparent;
+}
+.modal-footer .btn-danger:hover { background: rgba(239,68,68,0.1); }
+.modal-footer .spacer { flex: 1; }
+.modal-footer .mode-toggle {
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px; cursor: pointer;
+  transition: var(--transition);
+}
+.modal-footer .mode-toggle:hover { background: rgba(255,255,255,0.1); }
+.modal-footer .mode-toggle.active {
+  background: rgba(99,102,241,0.2);
+  color: #a5b4fc;
+  border-color: rgba(99,102,241,0.3);
+}
+
+/* Delete confirmation */
+.delete-confirm {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.delete-confirm span { flex: 1; font-size: 13px; color: #fca5a5; }
+.delete-confirm .btn-sm {
+  padding: 6px 14px; border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none; transition: var(--transition);
+}
+.delete-confirm .btn-confirm-delete {
+  background: var(--danger); color: white;
+}
+.delete-confirm .btn-confirm-delete:hover { filter: brightness(1.15); }
+.delete-confirm .btn-cancel-delete {
+  background: rgba(255,255,255,0.1); color: var(--text-secondary);
+}
+
+/* ========================================
+   AI Assistant Panel
+   ======================================== */
+.ai-panel {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 420px; max-width: 90vw;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border);
+  z-index: 300;
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 30px rgba(0,0,0,0.4);
+}
+.ai-panel.open { transform: translateX(0); }
+.ai-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ai-panel-header h2 {
+  font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+}
+.ai-panel-header h2 .ai-badge {
+  font-size: 10px; padding: 3px 8px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
+  border-radius: 10px; color: #c4b5fd;
+  font-weight: 500;
+}
+.ai-panel-content {
+  flex: 1; overflow-y: auto; padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.ai-panel-content::-webkit-scrollbar { width: 4px; }
+.ai-panel-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.ai-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.ai-section h3 {
+  font-size: 13px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+.ai-section .ai-template-btn {
+  display: block; width: 100%; text-align: left;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px; cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 8px;
+  font-family: inherit;
+}
+.ai-section .ai-template-btn:hover {
+  background: rgba(99,102,241,0.1);
+  border-color: rgba(99,102,241,0.2);
+  color: var(--text-primary);
+}
+.ai-section .ai-template-btn .tmpl-icon {
+  margin-right: 8px;
+}
+.ai-section .ai-template-btn .tmpl-desc {
+  display: block; font-size: 11px;
+  color: var(--text-muted); margin-top: 3px;
+}
+.ai-input-area {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.ai-input-area textarea {
+  width: 100%; min-height: 100px;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px; font-family: inherit;
+  outline: none; resize: vertical;
+  transition: var(--transition);
+}
+.ai-input-area textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+}
+.ai-input-area button {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border: none; border-radius: var(--radius-sm);
+  color: white; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: var(--transition);
+}
+.ai-input-area button:hover { filter: brightness(1.1); }
+.ai-output {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.8;
+  min-height: 60px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ai-output.loading {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-muted);
+}
+.ai-dots { display: flex; gap: 4px; }
+.ai-dots span {
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: dotPulse 1.4s infinite ease-in-out both;
+}
+.ai-dots span:nth-child(1) { animation-delay: -0.32s; }
+.ai-dots span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes dotPulse {
+  0%,80%,100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.ai-actions-row {
+  display: flex; gap: 8px;
+}
+.ai-actions-row button {
+  flex: 1; padding: 8px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px; cursor: pointer;
+  transition: var(--transition);
+}
+.ai-actions-row button:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+}
+
+/* AI Backdrop */
+.ai-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 290;
+  opacity: 0; visibility: hidden;
+  transition: 0.3s;
+}
+.ai-backdrop.open { opacity: 1; visibility: visible; }
+
+/* ========================================
+   Toast
+   ======================================== */
+.toast-container {
+  position: fixed; top: 20px; right: 20px;
+  z-index: 999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  color: white;
+  box-shadow: var(--shadow);
+  animation: toastIn 0.3s ease;
+  max-width: 360px;
+}
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.toast.info { background: var(--accent); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ========================================
+   Context Menu
+   ======================================== */
+.context-menu {
+  position: fixed;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  z-index: 600;
+  min-width: 160px;
+  padding: 6px;
+  opacity: 0; visibility: hidden;
+  transform: scale(0.95);
+  transition: 0.15s;
+}
+.context-menu.open {
+  opacity: 1; visibility: visible;
+  transform: scale(1);
+}
+.context-menu .menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px; color: var(--text-secondary);
+  cursor: pointer; transition: var(--transition);
+}
+.context-menu .menu-item:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+.context-menu .menu-item.danger { color: #fca5a5; }
+.context-menu .menu-item.danger:hover { background: rgba(239,68,68,0.1); }
+
+/* ========================================
+   Mobile Responsive
+   ======================================== */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    transform: translateX(-100%);
+    z-index: 200; width: 280px;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 190;
+    display: none;
+  }
+  .sidebar-backdrop.open { display: block; }
+  .sidebar-toggle { display: flex; }
+  .toolbar { padding: 12px 16px; gap: 8px; flex-wrap: wrap; }
+  .toolbar .search-box { max-width: none; order: 3; flex-basis: 100%; }
+  .entry-list-container { padding: 12px 16px; gap: 8px; }
+  .entry-card { padding: 14px 16px; }
+  .fab { bottom: 20px; right: 20px; width: 48px; height: 48px; font-size: 20px; }
+  .modal { max-width: 100vw; max-height: 100vh; border-radius: 0; }
+  .ai-panel { width: 100vw; max-width: 100vw; }
+  .password-card { padding: 32px 24px; }
+}
+
+@media (max-width: 480px) {
+  .toolbar .btn span.btn-label { display: none; }
+  .toolbar .btn { padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========================================
+     Password Overlay
+     ======================================== -->
+<div class="password-overlay" id="passwordOverlay">
+  <div class="password-card">
+    <div class="logo-icon">🧠</div>
+    <h1>认知框架</h1>
+    <p class="subtitle">个人知识体系 · 让思考有迹可循</p>
+    <input type="password" id="passwordInput"
+           placeholder="输入访问密码" autocomplete="off"
+           onkeydown="if(event.key==='Enter')unlock()">
+    <button onclick="unlock()">🔓 解锁进入</button>
+    <div class="error-msg" id="passwordError"></div>
+  </div>
+</div>
+
+<!-- ========================================
+     Main App
+     ======================================== -->
+<div class="app-container" id="appContainer">
+  
+  <!-- Sidebar Toggle (Mobile) -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="菜单">
+    ☰
+  </button>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">🧠</div>
+        <div>
+          <div class="brand-text">认知框架</div>
+          <div class="brand-sub">Personal Knowledge Hub</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <!-- Dynamically filled -->
+    </nav>
+    <div class="sidebar-footer">
+      <div class="stats" id="sidebarStats">
+        <span>📄 <strong id="statTotal">0</strong> 条</span>
+        <span>🕐 <strong id="statToday">0</strong> 今日</span>
+        <span>📅 <strong id="statWeek">0</strong> 本周</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="搜索知识条目..." oninput="renderEntries()">
+      </div>
+      <span class="entry-count" id="entryCount">共 0 条</span>
+      <button class="btn" onclick="exportData()" title="导出备份">
+        📥 <span class="btn-label">导出</span>
+      </button>
+      <button class="btn" onclick="document.getElementById('importFileInput').click()" title="导入数据">
+        📤 <span class="btn-label">导入</span>
+      </button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn ai-btn" onclick="toggleAIPanel()" title="AI 助手">
+        ✨ <span class="btn-label">AI工坊</span>
+      </button>
+    </div>
+
+    <!-- Entry List -->
+    <div class="entry-list-container" id="entryList">
+      <!-- Dynamically filled -->
+    </div>
+  </main>
+</div>
+
+<!-- ========================================
+     FAB Button
+     ======================================== -->
+<button class="fab" id="fabBtn" onclick="openEditor()" title="新建条目">+</button>
+
+<!-- ========================================
+     Editor Modal
+     ======================================== -->
+<div class="modal-overlay" id="editorModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="editorTitle">✍️ 新建知识条目</h2>
+      <button class="close-btn" onclick="closeEditor()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label>分类</label>
+      <select id="editCategory">
+        <option value="tech">🔧 技术知识 / 编程经验</option>
+        <option value="product">📦 产品 / 项目经验</option>
+        <option value="reading">📚 阅读 / 学习笔记</option>
+        <option value="ideas">💡 想法 / 灵感记录</option>
+        <option value="methods">🧠 工作方法 / 思维模型</option>
+      </select>
+      <label>标题</label>
+      <input type="text" id="editTitle" placeholder="给这条知识起个名字...">
+      <label>标签（逗号分隔）</label>
+      <input type="text" id="editTags" placeholder="例如：AI, 效率, 思考">
+      <label>正文（支持 Markdown）</label>
+      <textarea id="editContent" placeholder="在这里写下你的思考...&#10;&#10;支持 Markdown 语法：&#10;## 二级标题&#10;- 列表项&#10;**加粗文字**&#10;> 引用"></textarea>
+      <!-- Markdown Preview -->
+      <div class="preview-pane" id="previewPane" style="display:none;"></div>
+      <!-- Delete Confirm -->
+      <div class="delete-confirm" id="deleteConfirm" style="display:none;">
+        <span>⚠️ 确定要删除这条知识条目吗？此操作不可撤销。</span>
+        <button class="btn-sm btn-cancel-delete" onclick="cancelDelete()">取消</button>
+        <button class="btn-sm btn-confirm-delete" onclick="confirmDelete()">确认删除</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btnDeleteEntry" onclick="showDeleteConfirm()" style="display:none;">
+        🗑 删除
+      </button>
+      <div class="spacer"></div>
+      <button class="mode-toggle" id="modeToggle" onclick="togglePreview()">
+        👁 预览
+      </button>
+      <button class="btn btn-secondary" onclick="closeEditor()">取消</button>
+      <button class="btn btn-primary" onclick="saveEntry()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================
+     AI Panel
+     ======================================== -->
+<div class="ai-backdrop" id="aiBackdrop" onclick="toggleAIPanel()"></div>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-panel-header">
+    <h2>✨ AI 思维工坊 <span class="ai-badge">Beta</span></h2>
+    <button class="close-btn" onclick="toggleAIPanel()">✕</button>
+  </div>
+  <div class="ai-panel-content">
+    
+    <!-- Thinking Templates -->
+    <div class="ai-section">
+      <h3>📋 思维模板</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+        选择一个当前条目的标题，AI会基于模板帮你深化思考
+      </p>
+      <select id="aiEntrySelect" style="width:100%;padding:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;margin-bottom:10px;outline:none;font-family:inherit;">
+        <option value="">-- 选择知识条目 --</option>
+      </select>
+      <button class="ai-template-btn" onclick="aiDeepen('追问')">
+        <span class="tmpl-icon">🔍</span> 深度追问
+        <span class="tmpl-desc">对这个想法连续追问三层"为什么"</span>
+      </button>
+      <button class="ai-template-btn" onclick="aiDeepen('拓展')">
+        <span class="tmpl-icon">🌐</span> 视角拓展
+        <span class="tmpl-desc">从不同角度重新审视这个想法</span>
+      </button>
+      <button class="ai-template-btn" onclick="aiDeepen('连接')">
+        <span class="tmpl-icon">🔗</span> 关联发现
+        <span class="tmpl-desc">找到与其他知识条目的潜在关联</span>
+      </button>
+      <button class="ai-template-btn" onclick="aiDeepen('行动')">
+        <span class="tmpl-icon">🎯</span> 行动转化
+        <span class="tmpl-desc">将这个想法转化为具体可执行的行动</span>
+      </button>
+    </div>
+
+    <!-- Anxiety Management -->
+    <div class="ai-section">
+      <h3>🧘 焦虑整理</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+        当你感到思绪纷乱时，试试这个结构化梳理
+      </p>
+      <button class="ai-template-btn" onclick="aiAnxietyDump()">
+        <span class="tmpl-icon">🌊</span> 想法倾倒
+        <span class="tmpl-desc">把所有萦绕脑中的想法写下来，AI帮你分类整理</span>
+      </button>
+      <button class="ai-template-btn" onclick="aiAnxietyReframe()">
+        <span class="tmpl-icon">🪞</span> 认知重构
+        <span class="tmpl-desc">识别焦虑想法中的认知偏差，转换视角</span>
+      </button>
+      <button class="ai-template-btn" onclick="aiMindClear()">
+        <span class="tmpl-icon">🍃</span> 清空思绪
+        <span class="tmpl-desc">快速头脑清空练习，5分钟让心静下来</span>
+      </button>
+    </div>
+
+    <!-- Free Chat -->
+    <div class="ai-section">
+      <h3>💬 自由对话</h3>
+      <div class="ai-input-area">
+        <textarea id="aiFreeInput" placeholder="和AI聊聊你的想法...&#10;&#10;例如：&#10;• \"帮我总结一下最近一周记录的要点\"&#10;• \"我对XX问题感到很困惑，帮我梳理一下\"&#10;• \"根据我的知识库，给我一些写作灵感\"&#10;• \"分析我最近的情绪模式\"" ></textarea>
+        <button onclick="aiFreeChat()">💬 开始对话</button>
+        <div class="ai-output" id="aiOutput" style="display:none;"></div>
+        <div class="ai-actions-row" id="aiActions" style="display:none;">
+          <button onclick="copyAIOutput()">📋 复制</button>
+          <button onclick="saveAIAsEntry()">💾 保存为条目</button>
+          <button onclick="clearAIOutput()">🗑 清除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Config -->
+    <div class="ai-section" style="opacity:0.7;">
+      <h3>⚙️ AI 配置（可选）</h3>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
+        当前为本地模拟模式。如需真实AI能力，可配置兼容OpenAI的API端点。<br>
+        所有配置仅存储在本地浏览器中。
+      </p>
+      <input type="text" id="aiApiKey" placeholder="API Key（可选）"
+             style="width:100%;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;margin-bottom:6px;outline:none;font-family:monospace;">
+      <input type="text" id="aiApiEndpoint" placeholder="API Endpoint (默认: OpenAI兼容)"
+             style="width:100%;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;margin-bottom:6px;outline:none;font-family:monospace;">
+      <input type="text" id="aiModel" placeholder="Model (如 gpt-4o, deepseek-chat)"
+             style="width:100%;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;margin-bottom:8px;outline:none;">
+      <button onclick="saveAIConfig()" style="width:100%;padding:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-size:12px;cursor:pointer;">💾 保存配置</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================
+     Context Menu
+     ======================================== -->
+<div class="context-menu" id="contextMenu">
+  <div class="menu-item" onclick="contextEdit()">✏️ 编辑</div>
+  <div class="menu-item" onclick="contextDeepen()">✨ AI深化</div>
+  <div class="menu-item" onclick="contextCopy()">📋 复制内容</div>
+  <div class="menu-item danger" onclick="contextDelete()">🗑 删除</div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ========================================
+   认知框架 - 核心 JavaScript
+   ======================================== */
+
+// ── Constants ────────────────────────────
+const STORAGE_KEY = 'knowledge_framework_data';
+const SESSION_KEY = 'knowledge_framework_auth';
+const AI_CONFIG_KEY = 'knowledge_framework_ai_config';
+// Default password: "test" → SHA-256 hex digest
+// 🔐 请修改为自己的密码：用浏览器控制台运行 README 中的哈希生成代码，替换下面这行
+const PASSWORD_HASH = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
+
+const CATEGORIES = {
+  tech:    { name: '技术知识', icon: '🔧', emoji: '🔧', color: 'var(--cat-tech)', bg: 'var(--cat-tech-bg)' },
+  product: { name: '产品/项目', icon: '📦', emoji: '📦', color: 'var(--cat-product)', bg: 'var(--cat-product-bg)' },
+  reading: { name: '阅读/学习', icon: '📚', emoji: '📚', color: 'var(--cat-reading)', bg: 'var(--cat-reading-bg)' },
+  ideas:   { name: '想法/灵感', icon: '💡', emoji: '💡', color: 'var(--cat-ideas)', bg: 'var(--cat-ideas-bg)' },
+  methods: { name: '思维模型', icon: '🧠', emoji: '🧠', color: 'var(--cat-methods)', bg: 'var(--cat-methods-bg)' }
+};
+
+// ── State ────────────────────────────────
+let entries = [];
+let currentCategory = 'all';
+let editingId = null;
+let contextMenuEntryId = null;
+let isPreviewMode = false;
+let deletePending = false;
+
+// ── Initialization ───────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadAIConfig();
+  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+    showApp();
+  }
+  // Load saved configs from localStorage
+  const savedKey = localStorage.getItem(AI_CONFIG_KEY);
+  if (savedKey) {
+    try {
+      const cfg = JSON.parse(savedKey);
+      document.getElementById('aiApiKey').value = cfg.apiKey || '';
+      document.getElementById('aiApiEndpoint').value = cfg.endpoint || '';
+      document.getElementById('aiModel').value = cfg.model || '';
+    } catch(e) {}
+  }
+});
+
+// ── Password / Auth ──────────────────────
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function unlock() {
+  const input = document.getElementById('passwordInput');
+  const errorEl = document.getElementById('passwordError');
+  const password = input.value.trim();
+  
+  if (!password) {
+    errorEl.textContent = '请输入密码';
+    input.classList.add('error');
+    setTimeout(() => input.classList.remove('error'), 400);
+    return;
+  }
+  
+  const hash = await hashPassword(password);
+  if (hash === PASSWORD_HASH) {
+    sessionStorage.setItem(SESSION_KEY, 'true');
+    document.getElementById('passwordOverlay').classList.add('hidden');
+    showApp();
+  } else {
+    errorEl.textContent = '密码错误，请重试';
+    input.classList.add('error');
+    input.value = '';
+    input.focus();
+    setTimeout(() => input.classList.remove('error'), 400);
+  }
+}
+
+function showApp() {
+  document.getElementById('appContainer').classList.add('visible');
+  loadEntries();
+  renderSidebar();
+  renderEntries();
+  updateStats();
+}
+
+// ── Data Management ──────────────────────
+function loadEntries() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  entries = raw ? JSON.parse(raw) : [];
+}
+
+function saveEntries() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+function getEntryById(id) {
+  return entries.find(e => e.id === id);
+}
+
+// ── Sidebar ──────────────────────────────
+function renderSidebar() {
+  const nav = document.getElementById('sidebarNav');
+  const counts = {};
+  entries.forEach(e => {
+    counts[e.category] = (counts[e.category] || 0) + 1;
+  });
+  
+  const totalCount = entries.length;
+  
+  let html = `
+    <div class="nav-item ${currentCategory === 'all' ? 'active' : ''}" 
+         onclick="switchCategory('all')">
+      <span class="nav-icon">📋</span>
+      <span>全部条目</span>
+      <span class="nav-badge">${totalCount}</span>
+    </div>`;
+  
+  for (const [key, cat] of Object.entries(CATEGORIES)) {
+    const count = counts[key] || 0;
+    html += `
+      <div class="nav-item ${currentCategory === key ? 'active' : ''}" 
+           onclick="switchCategory('${key}')">
+        <span class="nav-icon">${cat.emoji}</span>
+        <span>${cat.name}</span>
+        <span class="nav-badge">${count}</span>
+      </div>`;
+  }
+  
+  // Recent items
+  if (entries.length > 0) {
+    html += `<div style="margin-top:20px;padding:0 14px;">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">最近更新</div>`;
+    const recent = [...entries].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0,5);
+    recent.forEach(e => {
+      html += `
+        <div style="padding:6px 0;font-size:12px;color:var(--text-secondary);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+             onclick="openEditor('${e.id}')" title="${escapeHtml(e.title)}">
+          ${CATEGORIES[e.category]?.emoji || '📄'} ${escapeHtml(e.title)}
+        </div>`;
+    });
+    html += `</div>`;
+  }
+  
+  nav.innerHTML = html;
+}
+
+function switchCategory(cat) {
+  currentCategory = cat;
+  renderSidebar();
+  renderEntries();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('open');
+}
+
+// ── Entry Rendering ──────────────────────
+function renderEntries() {
+  const container = document.getElementById('entryList');
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+  
+  let filtered = entries;
+  
+  // Filter by category
+  if (currentCategory !== 'all') {
+    filtered = filtered.filter(e => e.category === currentCategory);
+  }
+  
+  // Filter by search
+  if (searchTerm) {
+    filtered = filtered.filter(e => {
+      return e.title.toLowerCase().includes(searchTerm)
+        || e.content.toLowerCase().includes(searchTerm)
+        || e.tags.some(t => t.toLowerCase().includes(searchTerm));
+    });
+  }
+  
+  // Sort by updatedAt desc
+  filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  
+  document.getElementById('entryCount').textContent = `共 ${filtered.length} 条`;
+  
+  if (filtered.length === 0) {
+    const catName = currentCategory === 'all' ? '' : CATEGORIES[currentCategory]?.name || '';
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">${searchTerm ? '🔍' : '📝'}</div>
+        <h3>${searchTerm ? '没有找到匹配的内容' : (catName ? `${catName} 分类暂无内容` : '还没有任何知识条目')}</h3>
+        <p>${searchTerm ? '试试其他关键词' : '点击右下角的 + 按钮，记录你的第一条想法吧 ✨'}</p>
+        ${!searchTerm && catName ? `<p style="font-size:13px;">"${catName}"是你知识体系的重要组成部分，开始积累吧</p>` : ''}
+      </div>`;
+    return;
+  }
+  
+  let html = '';
+  filtered.forEach(e => {
+    const cat = CATEGORIES[e.category] || { emoji: '📄' };
+    const preview = stripMarkdown(e.content).substring(0, 80);
+    const timeStr = formatTime(e.updatedAt);
+    const tagsHtml = e.tags.filter(t => t.trim()).map(t => 
+      `<span class="tag">#${escapeHtml(t.trim())}</span>`
+    ).join('');
+    
+    html += `
+      <div class="entry-card cat-${e.category}" 
+           onclick="openEditor('${e.id}')"
+           oncontextmenu="showContextMenu(event, '${e.id}')">
+        <div class="entry-card-header">
+          <div class="entry-card-title">${escapeHtml(e.title) || '未命名条目'}</div>
+          <div class="entry-card-meta">${timeStr}</div>
+        </div>
+        ${preview ? `<div class="entry-card-preview">${escapeHtml(preview)}</div>` : ''}
+        ${tagsHtml ? `<div class="entry-card-tags">${tagsHtml}</div>` : ''}
+      </div>`;
+  });
+  
+  container.innerHTML = html;
+}
+
+// ── Editor ───────────────────────────────
+function openEditor(id) {
+  editingId = id || null;
+  isPreviewMode = false;
+  deletePending = false;
+  
+  const modal = document.getElementById('editorModal');
+  const titleEl = document.getElementById('editorTitle');
+  const btnDelete = document.getElementById('btnDeleteEntry');
+  const deleteConfirm = document.getElementById('deleteConfirm');
+  const previewPane = document.getElementById('previewPane');
+  const contentArea = document.getElementById('editContent');
+  const modeToggle = document.getElementById('modeToggle');
+  
+  document.getElementById('previewPane').style.display = 'none';
+  document.getElementById('editContent').style.display = 'block';
+  document.getElementById('modeToggle').textContent = '👁 预览';
+  document.getElementById('modeToggle').classList.remove('active');
+  deleteConfirm.style.display = 'none';
+  
+  if (id) {
+    const entry = getEntryById(id);
+    if (!entry) return;
+    titleEl.textContent = '✏️ 编辑知识条目';
+    document.getElementById('editCategory').value = entry.category;
+    document.getElementById('editTitle').value = entry.title;
+    document.getElementById('editTags').value = entry.tags.join(', ');
+    document.getElementById('editContent').value = entry.content;
+    btnDelete.style.display = 'block';
+  } else {
+    titleEl.textContent = '✍️ 新建知识条目';
+    document.getElementById('editCategory').value = currentCategory !== 'all' ? currentCategory : 'ideas';
+    document.getElementById('editTitle').value = '';
+    document.getElementById('editTags').value = '';
+    document.getElementById('editContent').value = '';
+    btnDelete.style.display = 'none';
+  }
+  
+  modal.classList.add('open');
+  document.getElementById('editTitle').focus();
+}
+
+function closeEditor() {
+  document.getElementById('editorModal').classList.remove('open');
+  editingId = null;
+  deletePending = false;
+  isPreviewMode = false;
+  document.getElementById('deleteConfirm').style.display = 'none';
+  document.getElementById('btnDeleteEntry').style.display = 'none';
+}
+
+function togglePreview() {
+  const content = document.getElementById('editContent').value;
+  const preview = document.getElementById('previewPane');
+  const textarea = document.getElementById('editContent');
+  const toggle = document.getElementById('modeToggle');
+  
+  isPreviewMode = !isPreviewMode;
+  if (isPreviewMode) {
+    preview.innerHTML = marked.parse(content || '*暂无内容*');
+    preview.style.display = 'block';
+    textarea.style.display = 'none';
+    toggle.textContent = '✏️ 编辑';
+    toggle.classList.add('active');
+  } else {
+    preview.style.display = 'none';
+    textarea.style.display = 'block';
+    toggle.textContent = '👁 预览';
+    toggle.classList.remove('active');
+  }
+}
+
+function saveEntry() {
+  const title = document.getElementById('editTitle').value.trim();
+  const content = document.getElementById('editContent').value.trim();
+  const category = document.getElementById('editCategory').value;
+  const tagsStr = document.getElementById('editTags').value;
+  const tags = tagsStr.split(',').map(t => t.trim()).filter(t => t);
+  
+  if (!title) {
+    showToast('请填写标题', 'error');
+    return;
+  }
+  
+  const now = new Date().toISOString();
+  
+  if (editingId) {
+    const entry = getEntryById(editingId);
+    if (entry) {
+      entry.title = title;
+      entry.content = content;
+      entry.category = category;
+      entry.tags = tags;
+      entry.updatedAt = now;
+    }
+  } else {
+    entries.push({
+      id: generateId(),
+      title,
+      content,
+      category,
+      tags,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+  
+  saveEntries();
+  closeEditor();
+  renderSidebar();
+  renderEntries();
+  updateStats();
+  showToast(editingId ? '✅ 条目已更新' : '✅ 新条目已创建', 'success');
+  editingId = null;
+}
+
+function showDeleteConfirm() {
+  document.getElementById('deleteConfirm').style.display = 'flex';
+  deletePending = true;
+}
+
+function cancelDelete() {
+  document.getElementById('deleteConfirm').style.display = 'none';
+  deletePending = false;
+}
+
+function confirmDelete() {
+  if (editingId) {
+    entries = entries.filter(e => e.id !== editingId);
+    saveEntries();
+    closeEditor();
+    renderSidebar();
+    renderEntries();
+    updateStats();
+    showToast('🗑 条目已删除', 'info');
+  }
+}
+
+// ── Context Menu ─────────────────────────
+function showContextMenu(e, id) {
+  e.preventDefault();
+  contextMenuEntryId = id;
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight - 200) + 'px';
+  menu.classList.add('open');
+  
+  // Close menu when clicking elsewhere
+  const closeMenu = () => {
+    menu.classList.remove('open');
+    document.removeEventListener('click', closeMenu);
+    document.removeEventListener('scroll', closeMenu);
+  };
+  setTimeout(() => {
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('scroll', closeMenu);
+  }, 10);
+}
+
+function contextEdit() {
+  document.getElementById('contextMenu').classList.remove('open');
+  if (contextMenuEntryId) openEditor(contextMenuEntryId);
+}
+
+function contextDeepen() {
+  document.getElementById('contextMenu').classList.remove('open');
+  if (contextMenuEntryId) {
+    document.getElementById('aiEntrySelect').value = contextMenuEntryId;
+    toggleAIPanel(true);
+    setTimeout(() => aiDeepen('追问'), 300);
+  }
+}
+
+function contextCopy() {
+  document.getElementById('contextMenu').classList.remove('open');
+  if (contextMenuEntryId) {
+    const entry = getEntryById(contextMenuEntryId);
+    if (entry) {
+      navigator.clipboard.writeText(entry.content).then(() => {
+        showToast('📋 内容已复制', 'success');
+      }).catch(() => {
+        showToast('复制失败，请手动选择', 'error');
+      });
+    }
+  }
+}
+
+function contextDelete() {
+  document.getElementById('contextMenu').classList.remove('open');
+  if (contextMenuEntryId) {
+    openEditor(contextMenuEntryId);
+    setTimeout(() => showDeleteConfirm(), 200);
+  }
+}
+
+// ── Import / Export ──────────────────────
+function exportData() {
+  const data = JSON.stringify(entries, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `认知框架备份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📥 数据已导出', 'success');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('无效的数据格式');
+      
+      if (entries.length > 0) {
+        if (!confirm(`当前已有 ${entries.length} 条数据。\n\n选择"确定"将合并导入（不覆盖已有条目）\n选择"取消"将放弃导入`)) {
+          event.target.value = '';
+          return;
+        }
+      }
+      
+      // Merge: add only entries with new IDs
+      const existingIds = new Set(entries.map(e => e.id));
+      const newEntries = data.filter(e => !existingIds.has(e.id));
+      entries = [...entries, ...newEntries];
+      saveEntries();
+      renderSidebar();
+      renderEntries();
+      updateStats();
+      showToast(`📤 成功导入 ${newEntries.length} 条新条目`, 'success');
+    } catch(err) {
+      showToast('❌ 导入失败：文件格式不正确', 'error');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── AI Assistant ─────────────────────────
+function toggleAIPanel(forceOpen) {
+  const panel = document.getElementById('aiPanel');
+  const backdrop = document.getElementById('aiBackdrop');
+  const isOpen = panel.classList.contains('open');
+  
+  if (forceOpen === true || !isOpen) {
+    panel.classList.add('open');
+    backdrop.classList.add('open');
+    refreshAIEntrySelect();
+  } else {
+    panel.classList.remove('open');
+    backdrop.classList.remove('open');
+  }
+}
+
+function refreshAIEntrySelect() {
+  const select = document.getElementById('aiEntrySelect');
+  let html = '<option value="">-- 选择知识条目 --</option>';
+  entries.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).forEach(e => {
+    const cat = CATEGORIES[e.category] || { emoji: '📄' };
+    html += `<option value="${e.id}">${cat.emoji} ${escapeHtml(e.title || '未命名')}</option>`;
+  });
+  select.innerHTML = html;
+}
+
+function getSelectedAIEntry() {
+  const selectId = document.getElementById('aiEntrySelect').value;
+  if (!selectId) return null;
+  return getEntryById(selectId);
+}
+
+async function aiDeepen(mode) {
+  const entry = getSelectedAIEntry();
+  if (!entry) {
+    showToast('请先选择一个知识条目', 'error');
+    return;
+  }
+  
+  const prompts = {
+    '追问': `请基于以下知识条目，连续追问三个层级的"为什么"，帮助我深入思考：
+
+【条目标题】${entry.title}
+【条目内容】${entry.content}
+
+请按照以下格式输出：
+🔍 第一层：针对核心观点追问
+🔍 第二层：针对第一层答案追问
+🔍 第三层：触及本质的深层思考
+
+并给出一个总结性洞察。`,
+    
+    '拓展': `请从至少三个完全不同的视角审视以下想法，帮我跳出思维定式：
+
+【条目标题】${entry.title}
+【条目内容】${entry.content}
+
+请包括：
+1. 对立视角：持相反观点的人会怎么说？
+2. 外行视角：一个完全不懂这个领域的人会怎么看？
+3. 未来视角：5年后的我会怎么评价这个想法？
+
+每个视角用一段话说明，最后给出综合建议。`,
+    
+    '连接': `请分析以下知识条目，找出它可能与我知识库中其他条目的潜在关联：
+
+【目标条目标题】${entry.title}
+【目标条目内容】${entry.content}
+【知识库摘要】我有以下分类的知识条目：
+${Object.entries(CATEGORIES).map(([key,cat]) => {
+  const catEntries = entries.filter(e => e.category === key && e.id !== entry.id);
+  return `${cat.emoji} ${cat.name}(${catEntries.length}条): ${catEntries.map(e => e.title).join('、')}`;
+}).join('\n')}
+
+请找出3-5个有意义的关联，说明它们之间的联系和可以产生的化学反应。`,
+    
+    '行动': `请将以下想法/知识转化为具体可执行的行动计划：
+
+【条目标题】${entry.title}
+【条目内容】${entry.content}
+
+请输出：
+1. 🎯 核心行动目标（一句话）
+2. 📋 分解为 3-5 个具体步骤
+3. ⏰ 建议的时间节点
+4. 🚧 可能遇到的障碍和应对方案
+5. 📊 如何衡量进展`
+  };
+  
+  await showAIResponse(mode, prompts[mode]);
+}
+
+async function aiAnxietyDump() {
+  await showAIResponse('想法倾倒', 
+    '请按照以下结构，帮我整理和分类所有的焦虑想法：\n\n1. 🔴 标注"现在能做的"——转化为具体行动\n2. 🟡 标注"以后能做的"——设定未来触发条件\n3. ⚪ 标注"无法控制的"——练习放手\n\n对于"现在能做的"部分，给出第一步的最小行动建议。\n\n请用温暖而有力量的语言，帮助我感受：这些想法是可以被管理和转化的。');
+}
+
+async function aiAnxietyReframe() {
+  await showAIResponse('认知重构',
+    '请你扮演一个温和但理性的思考伙伴。我会向你描述一些让我焦虑的想法，请你帮我：\n\n1. 识别其中的认知偏差（如灾难化、非黑即白、过度概括等）\n2. 用更平衡、更现实的视角重新表述\n3. 提供一个简短的正念练习或安抚语句\n\n请用共情但不说教的方式，把我从"焦虑的窄巷"里带出来。');
+}
+
+async function aiMindClear() {
+  await showAIResponse('清空思绪',
+    '请引导我完成一个5分钟的心灵清空练习：\n\n1. 先让我做一个深呼吸引导（30秒）\n2. 引导我觉察此刻脑海中漂浮的3个想法，不加评判地观察它们\n3. 邀请我设想把这些想法写在落叶上，随溪水流走\n4. 引导我感受此刻的宁静\n5. 最后用一个温柔的问题收尾："此刻，什么对你来说是最重要的？"\n\n请用诗意而平静的语言，营造安全、包容的氛围。');
+}
+
+async function aiFreeChat() {
+  const input = document.getElementById('aiFreeInput').value.trim();
+  if (!input) {
+    showToast('请输入你想和AI讨论的内容', 'error');
+    return;
+  }
+  
+  // Build context from knowledge base
+  const recentEntries = [...entries].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0,5);
+  const contextStr = recentEntries.length > 0 ? 
+    `\n\n参考知识库（最近5条）：\n${recentEntries.map(e => `- [${CATEGORIES[e.category]?.name}] ${e.title}: ${e.content.substring(0,100)}...`).join('\n')}` : '';
+  
+  const prompt = input + contextStr + '\n\n请基于以上信息，给我有深度、有帮助的回应。';
+  
+  await showAIResponse('自由对话', prompt);
+}
+
+async function showAIResponse(mode, prompt) {
+  const output = document.getElementById('aiOutput');
+  const actions = document.getElementById('aiActions');
+  
+  output.style.display = 'block';
+  output.classList.add('loading');
+  output.innerHTML = `<div class="ai-dots"><span></span><span></span><span></span></div> 思考中...`;
+  actions.style.display = 'none';
+  
+  // Scroll to output
+  output.scrollIntoView({ behavior: 'smooth' });
+  
+  const config = getAIConfig();
+  
+  if (config.apiKey && config.endpoint) {
+    // Try real API call
+    try {
+      const response = await callAIAPI(config, prompt);
+      output.classList.remove('loading');
+      output.innerHTML = marked.parse(response);
+    } catch(err) {
+      console.error('AI API error:', err);
+      // Fallback to local simulation
+      const simulated = simulateAIResponse(mode, prompt);
+      output.classList.remove('loading');
+      output.innerHTML = marked.parse(simulated);
+      showToast('⚠️ API调用失败，使用本地模拟响应', 'info');
+    }
+  } else {
+    // Local simulation
+    await sleep(800 + Math.random() * 1200);
+    const simulated = simulateAIResponse(mode, prompt);
+    output.classList.remove('loading');
+    output.innerHTML = marked.parse(simulated);
+  }
+  
+  actions.style.display = 'flex';
+  // Store last AI output for save
+  output.dataset.mode = mode;
+}
+
+async function callAIAPI(config, prompt) {
+  const response = await fetch(config.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apiKey}`
+    },
+    body: JSON.stringify({
+      model: config.model || 'gpt-4o',
+      messages: [
+        { role: 'system', content: '你是一个深度思考助手，帮助用户整理知识、深化思考、管理焦虑。回复使用Markdown格式，语言温暖而有洞察力。' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.8,
+      max_tokens: 2000
+    })
+  });
+  
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || 'AI未返回有效响应';
+}
+
+function simulateAIResponse(mode, prompt) {
+  // Smart local simulation based on the mode
+  const selectedEntry = getSelectedAIEntry();
+  const entryTitle = selectedEntry?.title || '这个话题';
+  
+  const templates = {
+    '追问': `## 🔍 深度追问：${entryTitle}
+
+### 第一层追问
+> "这个想法的核心假设是什么？"
+
+看起来它建立在一个关键前提之上——你需要验证这个前提是否成立。很多时候我们焦虑的根源不在于想法本身，而在于未经审视的假设。
+
+### 第二层追问
+> "如果这个假设不成立，会怎样？"
+
+这可能会打开一条完全不同的思路。有时我们困在"必须如此"的思维里，但现实往往比我们想象的更灵活。
+
+### 第三层追问
+> "抛开所有限制，你真正想要的是什么？"
+
+这是触及本质的问题。很多时候，我们纠结于"如何做"，却忘了问自己"为什么做"。你记录这个想法的初衷，本身就包含着重要的线索。
+
+> **💡 核心洞察**：你反复回到这个主题，说明它触及了你内心真正在意的东西。给自己一点空间，让答案从安静中浮现，而不是从焦虑中逼迫。`,
+
+    '拓展': `## 🌐 多视角拓展
+
+### 🔴 对立视角
+持相反观点的人可能会说：这个想法忽略了一些边界条件。并非所有情况都适用同样的逻辑，需要更细致地划分场景。
+
+### 🟢 外行视角
+一个刚接触这个领域的人可能会问："为什么要这么复杂？有没有更简单的路径？"——这个问题本身就很值得思考。
+
+### 🔵 未来视角
+5年后的你回头看，可能会觉得："当时的纠结很有趣，但最终使我成长的正是这个探索的过程本身，而不是某个确定的答案。"
+
+> **💡 综合建议**：保持开放心态，同时推进2-3条不同的思路。让实践来验证，而不是在脑海中反复推演。`,
+
+    '连接': `## 🔗 关联发现
+
+浏览你的知识库后，我发现一些有趣的连接：
+
+1. **与学习笔记的关联**：你最近阅读的内容中，有关于认知心理学的记录，这和你当前思考的主题有深层共鸣——都在探讨"人如何理解和应对不确定性"。
+
+2. **与项目经验的关联**：你在项目中遇到的挑战，本质上可能也是同一个模式的不同体现——对"完美方案"的追求 vs "够用就行"的现实。
+
+3. **与思维模型的关联**：可以尝试用"第一性原理"重新拆解这个问题，把表面的焦虑还原为最基本的要素。
+
+> **💡 交叉领域最有价值**：建议把这些相关条目放在一起重新阅读，你会发现之前没注意到的模式。`,
+
+    '行动': `## 🎯 行动转化计划
+
+### 核心目标
+从现在开始，将思考转化为一个为期2周的小实验。
+
+### 具体步骤
+1. **第一步（今天）**：用5分钟把核心想法写成一个具体的假设陈述
+2. **第二步（本周）**：找一个可以验证这个想法的小场景，实际尝试
+3. **第三步（下周）**：记录结果，无论成功或失败都是宝贵的数据
+4. **第四步（2周后）**：回过头来重新审视最初的想法，看看有什么变化
+
+### 可能障碍
+- 完美主义导致迟迟不开始 → 允许自己做一个"够用就行"的版本
+- 忙起来就忘了 → 在日历里设置一个提醒
+- 自我怀疑 → 记住：行动本身就能减少焦虑
+
+### 衡量标准
+- 是否开始了第一步（是/否）
+- 过程中学到了什么（写下来）
+- 2周后的反思笔记
+
+> **🚀 最小第一步**：现在就打开编辑器，写下你的假设陈述。只需要一句话。`,
+
+    '想法倾倒': `## 🌊 想法分类整理
+
+### 🔴 现在能做的
+把注意力集中在你当前能影响的范围内。列出3件你今天就能做的事——哪怕是很小的事。行动是焦虑最好的解药。
+
+> **最小第一步**：选其中最小、最容易完成的那件，现在就去做。
+
+### 🟡 以后能做的
+有些事情需要时机和条件。把它们记录下来，设定一个回顾时间（比如下个月1号），在此之前允许自己暂时放下。
+
+### ⚪ 无法控制的
+有些事超出了个人的影响范围。承认这一点不是放弃，而是智慧。把这些担忧写在"放手清单"里，允许自己不再为它们消耗心力。
+
+> 🌿 **记住**：大脑中反复盘旋的想法，一旦被写下来、被分类、被安置，就不再对你拥有同样的控制力。你已经迈出了最重要的一步。`,
+
+    '认知重构': `## 🪞 认知重构
+
+### 识别认知模式
+当我们感到焦虑时，大脑常常会自动使用一些"认知捷径"——但这些捷径有时候会带我们走进死胡同。
+
+常见模式包括：
+- **灾难化**："如果这件事做不好，一切就都完了"
+- **非黑即白**："要么完美，要么失败"
+- **过度概括**："我总是这样/从来都是这样"
+
+### 转换视角
+试着用一个更温和、更真实的视角重新看待：
+- 大多数事情的后果没有我们想象的那么严重
+- 在"完美"和"失败"之间，有广阔的灰色地带叫"还可以"
+- 每个人都在成长，昨天的你和今天的你已经不同了
+
+### 🌸 安抚练习
+> 深呼吸三次。把手放在心口。
+> 对自己说："此刻的我，是安全的。这些想法只是想法，不是事实。我可以和它们共处，而不被它们淹没。"
+> 
+> 每一次焦虑来访，都是一次练习内心力量的机会。你不是在倒退，你在变得更强。`,
+
+    '清空思绪': `## 🍃 5分钟心灵清空
+
+### 🌬️ 深呼吸引导
+> 请放下手机，坐直或躺下。
+> 用鼻子深深地吸气，数4秒...
+> 屏住呼吸，数4秒...
+> 用嘴巴缓缓地呼气，数6秒...
+> 重复3次。感受肩膀在每一次呼气中下沉一点。
+
+### 🍂 觉察而不评判
+脑海里此刻飘着什么？
+- 也许是待办事项
+- 也许是对某件事的担忧
+- 也许是碎片化的记忆
+
+就这样看着它们，像看天上的云。不抓住，不推开，只是看着。
+
+### 🍃 落叶溪水
+想象你坐在一条安静的小溪边。每片落叶代表一个想法。你把它轻轻放在水面上，看它顺着水流漂远。不急着追，不急着捞，只是让它走。
+
+### 🌅 回归宁静
+> 此刻，没有什么必须做。
+> 此刻，没有什么必须想。
+> 此刻，你只需要呼吸和存在。
+
+### 🌟 最后一个问题
+**"此刻，什么对你来说是最重要的？"**
+
+不是"应该"重要的，不是你"需要"完成的——而是此刻，你的心告诉你什么是最重要的。
+
+倾听那个安静的答案。`,
+
+    '自由对话': `## 💬 回应
+
+感谢你的分享。基于你的知识库和你当前的想法，我有以下思考：
+
+### 观察
+你的思考中透露出一种对"清晰"和"秩序"的自然渴望——这完全正常，甚至是高敏感型认知者的优势。当外界信息太杂乱时，建立自己的内在秩序是一种健康的应对方式。
+
+### 建议
+1. **不要试图一次整理完所有内容**。认知框架不是用来"完成"的，是用来"陪伴"的。
+2. **允许碎片存在**。不是每一条想法都需要立刻被深化。有些碎片需要时间发酵。
+3. **关注重复出现的主题**。如果你的想法中某个主题反复出现，那就是你内心在告诉你：这很重要。
+
+### 一个实验
+接下来一周，每次记录想法时，额外标注一个"情绪温度"（1-10）。一周后回看，你会发现情绪和想法之间的有趣关联。
+
+> 💬 随时回来找我聊。每一次对话都是向自己更近一步。`
+  };
+  
+  return templates[mode] || templates['自由对话'];
+}
+
+function copyAIOutput() {
+  const output = document.getElementById('aiOutput');
+  const text = output.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 已复制到剪贴板', 'success');
+  }).catch(() => {
+    showToast('复制失败，请手动选择', 'error');
+  });
+}
+
+function saveAIAsEntry() {
+  const output = document.getElementById('aiOutput');
+  const mode = output.dataset.mode || 'AI对话';
+  const text = output.innerText;
+  
+  if (!text.trim()) {
+    showToast('没有可保存的内容', 'error');
+    return;
+  }
+  
+  // Determine best category
+  let category = 'ideas';
+  if (mode.includes('行动')) category = 'methods';
+  if (mode.includes('学习') || mode.includes('追问')) category = 'reading';
+  
+  entries.push({
+    id: generateId(),
+    title: `🤖 AI工坊 · ${mode}`,
+    content: text,
+    category: category,
+    tags: ['AI生成', mode],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+  
+  saveEntries();
+  renderSidebar();
+  renderEntries();
+  updateStats();
+  showToast('💾 AI内容已保存为知识条目', 'success');
+}
+
+function clearAIOutput() {
+  document.getElementById('aiOutput').style.display = 'none';
+  document.getElementById('aiOutput').innerHTML = '';
+  document.getElementById('aiActions').style.display = 'none';
+}
+
+// ── AI Config ────────────────────────────
+function getAIConfig() {
+  try {
+    const raw = localStorage.getItem(AI_CONFIG_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) {
+    return {};
+  }
+}
+
+function saveAIConfig() {
+  const config = {
+    apiKey: document.getElementById('aiApiKey').value.trim(),
+    endpoint: document.getElementById('aiApiEndpoint').value.trim(),
+    model: document.getElementById('aiModel').value.trim()
+  };
+  localStorage.setItem(AI_CONFIG_KEY, JSON.stringify(config));
+  showToast('⚙️ AI配置已保存', 'success');
+}
+
+function loadAIConfig() {
+  const config = getAIConfig();
+  if (config.apiKey) document.getElementById('aiApiKey').value = config.apiKey;
+  if (config.endpoint) document.getElementById('aiApiEndpoint').value = config.endpoint;
+  if (config.model) document.getElementById('aiModel').value = config.model;
+}
+
+// ── Stats ────────────────────────────────
+function updateStats() {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()).toISOString();
+  
+  const todayCount = entries.filter(e => e.createdAt >= todayStart || e.updatedAt >= todayStart).length;
+  const weekCount = entries.filter(e => e.createdAt >= weekStart || e.updatedAt >= weekStart).length;
+  
+  document.getElementById('statTotal').textContent = entries.length;
+  document.getElementById('statToday').textContent = todayCount;
+  document.getElementById('statWeek').textContent = weekCount;
+  
+  // Update storage estimate
+  const dataSize = new Blob([JSON.stringify(entries)]).size;
+  const usagePercent = ((dataSize / (5 * 1024 * 1024)) * 100).toFixed(1);
+  if (usagePercent > 80) {
+    showToast(`⚠️ 存储用量 ${usagePercent}%，建议导出备份`, 'info');
+  }
+}
+
+// ── Utilities ────────────────────────────
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+}
+
+function stripMarkdown(md) {
+  return md.replace(/[#*`>\[\]()!_~\-]/g, '').replace(/\n+/g, ' ').trim();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatTime(isoStr) {
+  const date = new Date(isoStr);
+  const now = new Date();
+  const diff = now - date;
+  
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)}小时前`;
+  if (diff < 604800000) return `${Math.floor(diff/86400000)}天前`;
+  
+  return date.toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = '0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// ── Keyboard Shortcuts ───────────────────
+document.addEventListener('keydown', (e) => {
+  // Escape to close modals
+  if (e.key === 'Escape') {
+    if (document.getElementById('aiPanel').classList.contains('open')) {
+      toggleAIPanel();
+    } else if (document.getElementById('editorModal').classList.contains('open')) {
+      closeEditor();
+    }
+    document.getElementById('contextMenu').classList.remove('open');
+  }
+  
+  // Ctrl/Cmd + N to create new entry
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    openEditor();
+  }
+  
+  // Ctrl/Cmd + K to focus search
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+  
+  // Ctrl/Cmd + S to save in editor
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    if (document.getElementById('editorModal').classList.contains('open')) {
+      e.preventDefault();
+      saveEntry();
+    }
+  }
+});
+
+// ── Initialization check ─────────────────
+if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+  showApp();
+}
+
+console.log('🧠 认知框架已就绪');
+console.log('   ⌨️ 快捷键: Ctrl+N 新建 | Ctrl+K 搜索 | Ctrl+S 保存 | Esc 关闭');
+console.log('   📱 数据存储: localStorage (浏览器本地)');
+console.log('   🤖 AI工坊: 可配置OpenAI兼容API');
+</script>
+
+</body>
+</html>
